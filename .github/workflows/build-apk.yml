@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -36,3 +36,17 @@ jobs:
           name: normal-helth-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # Keep a small, directly downloadable copy on the session branch as well.
+      # The APK is the requested deliverable; this also makes it accessible when
+      # the Actions artifact storage is unavailable in a restricted environment.
+      - name: Publish debug APK on the branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk Normal-Helth-debug.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Normal-Helth-debug.apk
+          git commit -m "build: publish debug APK [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
