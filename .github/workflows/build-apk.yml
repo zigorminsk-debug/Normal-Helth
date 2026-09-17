@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build signed Android APK
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Assemble debug APK
+    name: Assemble signed release APK
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -27,26 +27,26 @@ jobs:
         with:
           gradle-version: "8.7"
 
-      - name: Assemble APK
-        run: gradle --no-daemon --stacktrace assembleDebug
+      - name: Assemble signed release APK
+        run: gradle --no-daemon --stacktrace assembleRelease
 
-      - name: Upload APK
+      - name: Verify and upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: normal-helth-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: zi-normal-helth-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
-      # Keep a small, directly downloadable copy on the session branch as well.
-      # The APK is the requested deliverable; this also makes it accessible when
-      # the Actions artifact storage is unavailable in a restricted environment.
-      - name: Publish debug APK on the branch
+      # Keep a directly downloadable copy on the session branch as the requested
+      # deliverable. It is signed with the persistent keystore in this project.
+      - name: Publish signed APK on the branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Normal-Helth-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk ZI-Normal-Helth-release.apk
+          git rm -f Normal-Helth-debug.apk || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Normal-Helth-debug.apk
-          git commit -m "build: publish debug APK [skip ci]"
+          git add ZI-Normal-Helth-release.apk
+          git commit -m "build: publish signed release APK [skip ci]"
           git push origin "HEAD:${GITHUB_REF_NAME}"
