@@ -1,0 +1,15 @@
+# Local Android/Gradle output
+.gradle/
+local.properties
+build/
+app/build/
+
+# Keep the Android release signing material out of source control.
+# Back up these files securely; losing the keystore prevents future updates
+# from being installed over the already published APK.
+keystore.properties
+signing/*.p12
+signing/*.jks
+signing/*.keystore
+signing/*.key
+signing/*.crt

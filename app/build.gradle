@@ -1,6 +1,19 @@
+import java.util.Properties
+
 plugins {
     id "com.android.application"
 }
+
+def signingProperties = new Properties()
+def signingPropertiesFile = rootProject.file("keystore.properties")
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+def hasReleaseSigning = signingPropertiesFile.exists()
+        && signingProperties.getProperty("storeFile")
+        && signingProperties.getProperty("storePassword")
+        && signingProperties.getProperty("keyAlias")
+        && signingProperties.getProperty("keyPassword")
 
 android {
     namespace "by.normalhelth"
@@ -14,9 +27,22 @@ android {
         versionName "1.0"
     }
 
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile rootProject.file(signingProperties.getProperty("storeFile"))
+                storePassword signingProperties.getProperty("storePassword")
+                keyAlias signingProperties.getProperty("keyAlias")
+                keyPassword signingProperties.getProperty("keyPassword")
+                storeType signingProperties.getProperty("storeType", "pkcs12")
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (hasReleaseSigning) signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
