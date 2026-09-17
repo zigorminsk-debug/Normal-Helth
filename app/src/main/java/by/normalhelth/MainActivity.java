@@ -16,6 +16,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
@@ -398,9 +401,12 @@ public class MainActivity extends android.app.Activity {
                 13, MUTED, false), topMargin(7));
         exercise.addView(text("Выполняйте без рывков и остановитесь, если появляется боль или головокружение.",
                 12, MUTED, false), topMargin(5));
-        TextView video = actionButton("Запустить 3D-анимацию", false);
-        video.setOnClickListener(v -> showMorningAnimation());
-        exercise.addView(video, topMargin(11));
+        TextView guide = actionButton("Старт: картинки + голос", false);
+        guide.setOnClickListener(v -> showMorningSteps());
+        exercise.addView(guide, topMargin(11));
+        TextView animationLink = linkButton("Открыть 3D-анимацию");
+        animationLink.setOnClickListener(v -> showMorningAnimation());
+        exercise.addView(animationLink, topMargin(7));
         LinearLayout.LayoutParams exerciseParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         exerciseParams.topMargin = dp(16);
@@ -822,6 +828,158 @@ public class MainActivity extends android.app.Activity {
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
+    }
+
+    private void showMorningSteps() {
+        final int[] images = {
+                R.drawable.morning_step_1,
+                R.drawable.morning_step_2,
+                R.drawable.morning_step_3,
+                R.drawable.morning_step_4,
+                R.drawable.morning_step_5
+        };
+        final String[] titles = {
+                "Станьте прямо",
+                "Потянитесь вверх",
+                "Разбудите плечи",
+                "Поверните корпус",
+                "Шагайте на месте"
+        };
+        final String[] voiceText = {
+                "Станьте прямо. Стопы поставьте на ширине таза, руки свободно опустите вдоль тела. Сделайте спокойный вдох.",
+                "Плавно поднимите руки вверх и потянитесь всем телом. Не прогибайтесь в пояснице. Дышите ровно.",
+                "Положите ладони на плечи. Медленно выполняйте круги локтями назад, не поднимая плечи к ушам.",
+                "Скрестите руки на груди. Медленно поверните корпус вправо, затем влево. Стопы остаются на месте.",
+                "Спокойно шагайте на месте и поочерёдно поднимайте колени. Сохраняйте удобный темп и ровное дыхание."
+        };
+        final long stepDuration = 8000L;
+        final Dialog dialog = new Dialog(this);
+        LinearLayout sheet = new LinearLayout(this);
+        sheet.setOrientation(LinearLayout.VERTICAL);
+        sheet.setPadding(dp(18), dp(16), dp(18), dp(16));
+        sheet.setBackground(round(SURFACE, 24));
+
+        LinearLayout titleRow = row();
+        titleRow.addView(text("Разминка по шагам", 20, INK, true),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView close = linkButton("Закрыть");
+        close.setOnClickListener(v -> dialog.dismiss());
+        titleRow.addView(close, wrap());
+        sheet.addView(titleRow, wrap());
+        sheet.addView(text("Картинка меняется каждые 8 секунд, а голос подсказывает движение.",
+                13, MUTED, false), topMargin(4));
+
+        ImageView image = new ImageView(this);
+        image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        image.setBackground(round(SAGE_LIGHT, 18));
+        image.setContentDescription("Текущий шаг утренней разминки");
+        LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(245));
+        imageParams.topMargin = dp(13);
+        sheet.addView(image, imageParams);
+
+        TextView stepTitle = text("", 19, INK, true);
+        stepTitle.setGravity(Gravity.CENTER);
+        sheet.addView(stepTitle, topMargin(12));
+        TextView explanation = text("", 14, MUTED, false);
+        explanation.setGravity(Gravity.CENTER);
+        sheet.addView(explanation, topMargin(4));
+
+        ProgressBar progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progress.setMax(1000);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            progress.setProgressTintList(ColorStateList.valueOf(SAGE));
+            progress.setProgressBackgroundTintList(ColorStateList.valueOf(LINE));
+        }
+        LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(6));
+        progressParams.topMargin = dp(13);
+        sheet.addView(progress, progressParams);
+
+        TextView control = actionButton("Пауза", false);
+        sheet.addView(control, topMargin(12));
+        sheet.addView(text("Остановитесь, если появляется боль или головокружение.",
+                12, MUTED, false), topMargin(8));
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        final int[] current = {0};
+        final long[] startedAt = {android.os.SystemClock.uptimeMillis()};
+        final long[] pausedAt = {0L};
+        final boolean[] paused = {false};
+        final boolean[] voiceReady = {false};
+        final TextToSpeech[] speech = {null};
+        final Runnable[] speakCurrent = new Runnable[1];
+        final Runnable[] updateStep = new Runnable[1];
+
+        speakCurrent[0] = () -> {
+            if (voiceReady[0] && speech[0] != null) {
+                speech[0].speak(voiceText[current[0]], TextToSpeech.QUEUE_FLUSH,
+                        null, "morning_step_" + current[0]);
+            }
+        };
+        updateStep[0] = () -> {
+            image.setImageResource(images[current[0]]);
+            stepTitle.setText((current[0] + 1) + ". " + titles[current[0]]);
+            explanation.setText(voiceText[current[0]]);
+            progress.setProgress(0);
+            startedAt[0] = android.os.SystemClock.uptimeMillis();
+            speakCurrent[0].run();
+        };
+
+        final Runnable[] ticker = new Runnable[1];
+        ticker[0] = () -> {
+            if (!dialog.isShowing()) return;
+            if (!paused[0]) {
+                long elapsed = android.os.SystemClock.uptimeMillis() - startedAt[0];
+                int value = (int) Math.min(1000L, elapsed * 1000L / stepDuration);
+                progress.setProgress(value);
+                if (elapsed >= stepDuration) {
+                    current[0] = (current[0] + 1) % images.length;
+                    updateStep[0].run();
+                }
+            }
+            handler.postDelayed(ticker[0], 100L);
+        };
+
+        control.setOnClickListener(v -> {
+            if (paused[0]) {
+                startedAt[0] += android.os.SystemClock.uptimeMillis() - pausedAt[0];
+                paused[0] = false;
+                control.setText("Пауза");
+                speakCurrent[0].run();
+            } else {
+                pausedAt[0] = android.os.SystemClock.uptimeMillis();
+                paused[0] = true;
+                if (speech[0] != null) speech[0].stop();
+                control.setText("Продолжить");
+            }
+        });
+
+        speech[0] = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS && speech[0] != null) {
+                int result = speech[0].setLanguage(new Locale("ru", "RU"));
+                voiceReady[0] = result != TextToSpeech.LANG_MISSING_DATA
+                        && result != TextToSpeech.LANG_NOT_SUPPORTED;
+                if (voiceReady[0]) speakCurrent[0].run();
+            }
+        });
+        updateStep[0].run();
+        handler.post(ticker[0]);
+
+        dialog.setContentView(sheet);
+        dialog.setOnDismissListener(d -> {
+            handler.removeCallbacks(ticker[0]);
+            if (speech[0] != null) {
+                speech[0].stop();
+                speech[0].shutdown();
+            }
+        });
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
 
     private void showMorningAnimation() {
