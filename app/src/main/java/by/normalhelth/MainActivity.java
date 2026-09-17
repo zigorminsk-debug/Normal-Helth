@@ -59,6 +59,7 @@ public class MainActivity extends android.app.Activity {
     private static final int PEACH_LIGHT = Color.rgb(255, 240, 229);
     private static final int LAVENDER_LIGHT = Color.rgb(240, 238, 251);
     private static final int LINE = Color.rgb(229, 236, 231);
+    private static final String MORNING_VIDEO_URL = "https://www.youtube.com/watch?v=Y5jC8daStEc";
 
     private SharedPreferences prefs;
     private FrameLayout screenHolder;
@@ -378,6 +379,27 @@ public class MainActivity extends android.app.Activity {
         addRoutineRow(card, "01", "Свет и вода", "Откройте окно или выйдите к дневному свету");
         addRoutineRow(card, "02", "Разминка", "Три минуты мягких движений для тела");
         addRoutineRow(card, "03", "Завтрак", "Спокойно выберите блюдо из меню дня");
+
+        LinearLayout exercise = new LinearLayout(this);
+        exercise.setOrientation(LinearLayout.VERTICAL);
+        exercise.setPadding(dp(14), dp(14), dp(14), dp(14));
+        exercise.setBackground(round(SAGE_LIGHT, 18));
+        LinearLayout exerciseTop = row();
+        exerciseTop.addView(text("Упражнение для утра", 16, SAGE_DARK, true),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        exerciseTop.addView(pill("3 МИН", Color.WHITE, SAGE), wrap());
+        exercise.addView(exerciseTop, wrap());
+        exercise.addView(text("Мягкая активация тела: потянитесь вверх 3 раза, сделайте 5 кругов плечами назад и спокойно шагайте на месте 60 секунд.",
+                13, MUTED, false), topMargin(7));
+        exercise.addView(text("Выполняйте без рывков и остановитесь, если появляется боль или головокружение.",
+                12, MUTED, false), topMargin(5));
+        TextView video = actionButton("Смотреть видео-инструкцию", false);
+        video.setOnClickListener(v -> openMorningVideo());
+        exercise.addView(video, topMargin(11));
+        LinearLayout.LayoutParams exerciseParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        exerciseParams.topMargin = dp(16);
+        card.addView(exercise, exerciseParams);
         return card;
     }
 
@@ -782,6 +804,15 @@ public class MainActivity extends android.app.Activity {
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
+    }
+
+    private void openMorningVideo() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(MORNING_VIDEO_URL));
+            startActivity(intent);
+        } catch (Exception ignored) {
+            Toast.makeText(this, "Не удалось открыть видео. Проверьте подключение к интернету.", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void openNotificationSettings() {
