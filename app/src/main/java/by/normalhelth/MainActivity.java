@@ -886,17 +886,24 @@ public class MainActivity extends android.app.Activity {
         };
         final int[] cadenceAudio = {
                 R.raw.morning_breath_cycle,
-                R.raw.morning_motion_cycle,
-                R.raw.morning_motion_cycle,
-                R.raw.morning_motion_cycle,
-                R.raw.morning_motion_cycle
+                R.raw.morning_stretch_cycle,
+                R.raw.morning_shoulder_cycle,
+                R.raw.morning_turn_cycle,
+                R.raw.morning_march_cycle
         };
         final long[] cadenceInterval = {
-                24L * 1000L,
+                18L * 1000L,
                 12L * 1000L,
-                8L * 1000L,
-                10L * 1000L,
-                4L * 1000L
+                12L * 1000L,
+                12L * 1000L,
+                8L * 1000L
+        };
+        final long[][] frameBoundaries = {
+                {3_000L, 5_000L, 11_000L, 13_000L},
+                {2_000L, 4_000L, 7_000L, 9_000L},
+                {2_000L, 4_000L, 7_000L, 9_000L},
+                {2_000L, 4_000L, 7_000L, 9_000L},
+                {1_500L, 3_000L, 4_500L, 6_000L}
         };
         final long exerciseDuration = 2L * 60L * 1000L;
         final Dialog dialog = new Dialog(this);
@@ -951,7 +958,7 @@ public class MainActivity extends android.app.Activity {
         TextView repetitionStatus = text("Ритм: подготовка", 13, SAGE, true);
         repetitionStatus.setGravity(Gravity.CENTER);
         sheet.addView(repetitionStatus, topMargin(4));
-        sheet.addView(text("Диктор синхронно задаёт темп движения: для дыхания — вдох, задержка и длинный выдох; для остальных упражнений — начало, движение и возврат.",
+        sheet.addView(text("Дыхание: вдох через нос 3 секунды, комфортная задержка 2, длинный выдох 6 и тихая пауза 2. В движениях вдох перед усилием, выдох во время усилия. Не задерживайте дыхание через силу.",
                 12, MUTED, false), topMargin(6));
 
         final Handler handler = new Handler(Looper.getMainLooper());
@@ -1038,17 +1045,10 @@ public class MainActivity extends android.app.Activity {
                 long elapsed = android.os.SystemClock.uptimeMillis() - startedAt[0];
                 long remaining = Math.max(0L, exerciseDuration - elapsed);
                 long cycleElapsed = elapsed % cadenceInterval[current[0]];
-                int nextFrame;
-                if (current[0] == 0) {
-                    // One slow breathing cycle: inhale, hold, long exhale, then settle.
-                    if (cycleElapsed < 5000L) nextFrame = 0;
-                    else if (cycleElapsed < 8000L) nextFrame = 1;
-                    else if (cycleElapsed < 12000L) nextFrame = 2;
-                    else if (cycleElapsed < 20000L) nextFrame = 3;
-                    else nextFrame = 4;
-                } else {
-                    nextFrame = (int) Math.min(4L,
-                            cycleElapsed * 5L / cadenceInterval[current[0]]);
+                int nextFrame = 0;
+                while (nextFrame < 4
+                        && cycleElapsed >= frameBoundaries[current[0]][nextFrame]) {
+                    nextFrame++;
                 }
                 if (nextFrame != frameIndex[0]) {
                     frameIndex[0] = nextFrame;
