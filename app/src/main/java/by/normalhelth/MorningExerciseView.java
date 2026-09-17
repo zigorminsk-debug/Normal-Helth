@@ -251,7 +251,7 @@ public class MorningExerciseView extends View {
             handY = shoulderY + (4f + 88f * pose) * s;
         } else {
             float circleProgress = (progress - 0.16f) / 0.68f;
-            float angle = circleProgress * Math.PI * 4f;
+            float angle = (float) (circleProgress * Math.PI * 4f);
             float cos = (float) Math.cos(angle);
             float sin = (float) Math.sin(angle);
             elbowX = shoulderX + side * (51f + 7f * cos) * s;
