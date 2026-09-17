@@ -27,6 +27,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -404,6 +405,19 @@ public class MainActivity extends android.app.Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         exerciseParams.topMargin = dp(16);
         card.addView(exercise, exerciseParams);
+
+        card.addView(text("Разбор движения по шагам", 16, INK, true), topMargin(17));
+        ImageView sequence = new ImageView(this);
+        sequence.setImageResource(R.drawable.morning_sequence);
+        sequence.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        sequence.setAdjustViewBounds(true);
+        sequence.setContentDescription("Пять картинок с последовательностью утренней разминки");
+        LinearLayout.LayoutParams sequenceParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(156));
+        sequenceParams.topMargin = dp(7);
+        card.addView(sequence, sequenceParams);
+        card.addView(text("1. Стойка  ·  2. Потянуться  ·  3. Плечи  ·  4. Поворот  ·  5. Шаги на месте",
+                12, MUTED, false), topMargin(5));
         return card;
     }
 
