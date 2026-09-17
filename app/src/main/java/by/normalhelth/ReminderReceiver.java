@@ -27,7 +27,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         String title = intent.getStringExtra("title");
         String body = intent.getStringExtra("body");
-        if (title == null) title = "Напоминание от Режима";
+        if (title == null) title = "Напоминание от ZI-Normal-Helth";
         if (body == null) body = "Откройте приложение, чтобы посмотреть план на сегодня.";
 
         Intent openIntent = new Intent(context, MainActivity.class);
@@ -68,7 +68,7 @@ public class ReminderReceiver extends BroadcastReceiver {
     private static void createChannel(Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, "Режим дня", NotificationManager.IMPORTANCE_HIGH);
+                CHANNEL_ID, "ZI-Normal-Helth — режим дня", NotificationManager.IMPORTANCE_HIGH);
         channel.setDescription("Напоминания о сне, питании и активности");
         channel.enableVibration(true);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);

@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * The main screen of Режим. It intentionally uses only Android SDK widgets so the
+ * The main screen of ZI-Normal-Helth. It intentionally uses only Android SDK widgets so the
  * APK stays small, works offline, and does not need a third-party account.
  */
 public class MainActivity extends android.app.Activity {
@@ -291,7 +291,7 @@ public class MainActivity extends android.app.Activity {
     private View homeScreen() {
         LinearLayout content = new LinearLayout(this);
         View page = page(content);
-        addHeader(content, "РЕЖИМ", "Баланс дня", dateCaption());
+        addHeader(content, "ZI-Normal-Helth", "Баланс дня", dateCaption());
         content.addView(homeHero(), cardParams(0, 8, 0, 8));
         content.addView(sleepCard(), cardParams(0, 8, 0, 8));
         content.addView(morningCard(), cardParams(0, 8, 0, 8));
@@ -642,7 +642,7 @@ public class MainActivity extends android.app.Activity {
 
         LinearLayout info = card(PEACH_LIGHT);
         info.addView(text("О приложении", 17, INK, true), wrap());
-        info.addView(text("Режим помогает выстроить спокойную ежедневную последовательность: сон, питание и движение. Все данные хранятся только на этом устройстве.",
+        info.addView(text("ZI-Normal-Helth помогает выстроить спокойную ежедневную последовательность: сон, питание и движение. Все данные хранятся только на этом устройстве.",
                 13, MUTED, false), topMargin(6));
         content.addView(info, cardParams(0, 8, 0, 8));
         return page;
