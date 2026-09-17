@@ -22,6 +22,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowInsets;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -60,6 +63,7 @@ public class MainActivity extends android.app.Activity {
     private static final int PEACH_LIGHT = Color.rgb(255, 240, 229);
     private static final int LAVENDER_LIGHT = Color.rgb(240, 238, 251);
     private static final int LINE = Color.rgb(229, 236, 231);
+    private static final String SOURCE_VIDEO_URL = "https://www.youtube.com/embed/Y5jC8daStEc?playsinline=1&rel=0";
 
     private SharedPreferences prefs;
     private FrameLayout screenHolder;
@@ -820,7 +824,7 @@ public class MainActivity extends android.app.Activity {
         close.setOnClickListener(v -> dialog.dismiss());
         titleRow.addView(close, wrap());
         sheet.addView(titleRow, wrap());
-        sheet.addView(text("Собственная офлайн-анимация: три движения в спокойном темпе.",
+        sheet.addView(text("Собственная офлайн-анимация: понятная короткая разминка. Полная последовательность из видео — пальцы, запястья, локти, плечи, голова, позвоночник, таз, колени и голеностопы.",
                 13, MUTED, false), topMargin(4));
 
         MorningExerciseView animation = new MorningExerciseView(this);
@@ -837,11 +841,56 @@ public class MainActivity extends android.app.Activity {
             pause.setText(animation.isRunning() ? "Пауза" : "Продолжить");
         });
         sheet.addView(pause, topMargin(12));
+        TextView sourceVideo = actionButton("Открыть исходное видео внутри приложения", false);
+        sourceVideo.setOnClickListener(v -> showSourceVideo());
+        sheet.addView(sourceVideo, topMargin(12));
+        sheet.addView(text("Для исходного видео нужен интернет. Собственная анимация работает офлайн.",
+                12, MUTED, false), topMargin(6));
         sheet.addView(text("Выполняйте без боли и головокружения. При необходимости остановитесь и отдохните.",
-                12, MUTED, false), topMargin(9));
+                12, MUTED, false), topMargin(7));
 
         dialog.setContentView(sheet);
         dialog.setOnDismissListener(d -> animation.stopAnimation());
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+    }
+
+    private void showSourceVideo() {
+        final Dialog dialog = new Dialog(this);
+        LinearLayout sheet = new LinearLayout(this);
+        sheet.setOrientation(LinearLayout.VERTICAL);
+        sheet.setPadding(dp(14), dp(14), dp(14), dp(14));
+        sheet.setBackground(round(Color.BLACK, 20));
+
+        LinearLayout titleRow = row();
+        titleRow.addView(text("Видео-инструкция", 18, Color.WHITE, true),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView close = linkButton("Закрыть");
+        close.setTextColor(Color.WHITE);
+        close.setOnClickListener(v -> dialog.dismiss());
+        titleRow.addView(close, wrap());
+        sheet.addView(titleRow, wrap());
+
+        WebView webView = new WebView(this);
+        webView.setBackgroundColor(Color.BLACK);
+        webView.setWebViewClient(new WebViewClient());
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setMediaPlaybackRequiresUserGesture(true);
+        webView.loadUrl(SOURCE_VIDEO_URL);
+        sheet.addView(webView, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(235)));
+
+        dialog.setContentView(sheet);
+        dialog.setOnDismissListener(d -> {
+            webView.loadUrl("about:blank");
+            webView.destroy();
+        });
         dialog.show();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
