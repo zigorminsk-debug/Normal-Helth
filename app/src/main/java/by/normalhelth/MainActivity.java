@@ -13,12 +13,12 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.speech.tts.TextToSpeech;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
@@ -391,11 +391,11 @@ public class MainActivity extends android.app.Activity {
         LinearLayout exerciseTop = row();
         exerciseTop.addView(text("Упражнение для утра", 16, SAGE_DARK, true),
                 new LinearLayout.LayoutParams(0, -2, 1f));
-        exerciseTop.addView(pill("8 СЕК/ШАГ", Color.WHITE, SAGE), wrap());
+        exerciseTop.addView(pill("2 МИН/ШАГ", Color.WHITE, SAGE), wrap());
         exercise.addView(exerciseTop, wrap());
-        exercise.addView(text("Мягкая активация тела: потянитесь вверх 3 раза, сделайте 5 кругов плечами назад и спокойно шагайте на месте 60 секунд.",
+        exercise.addView(text("Пять понятных этапов: стойка и дыхание, потягивание, плечи, повороты корпуса и шаги на месте.",
                 13, MUTED, false), topMargin(7));
-        exercise.addView(text("Выполняйте без рывков и остановитесь, если появляется боль или головокружение.",
+        exercise.addView(text("Каждый этап длится 2 минуты. Двигайтесь без рывков и остановитесь, если появляется боль или головокружение.",
                 12, MUTED, false), topMargin(5));
         TextView guide = actionButton("Запустить: картинки + диктор", false);
         guide.setOnClickListener(v -> showMorningSteps());
@@ -405,7 +405,7 @@ public class MainActivity extends android.app.Activity {
         exerciseParams.topMargin = dp(16);
         card.addView(exercise, exerciseParams);
 
-        card.addView(text("Пошаговая анимация с диктором", 16, INK, true), topMargin(17));
+        card.addView(text("Пошаговая анимация с AI-диктором", 16, INK, true), topMargin(17));
         ImageView sequence = new ImageView(this);
         sequence.setImageResource(R.drawable.morning_sequence);
         sequence.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -417,7 +417,7 @@ public class MainActivity extends android.app.Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(156));
         sequenceParams.topMargin = dp(7);
         card.addView(sequence, sequenceParams);
-        card.addView(text("Нажмите на картинки или кнопку выше: каждый кадр держится 8 секунд, диктор сразу объясняет движение.",
+        card.addView(text("Нажмите на картинки или кнопку выше: каждый этап длится 2 минуты, AI-диктор объясняет движение и считает повторы.",
                 12, MUTED, false), topMargin(5));
         return card;
     }
@@ -827,27 +827,35 @@ public class MainActivity extends android.app.Activity {
 
     private void showMorningSteps() {
         final int[] images = {
-                R.drawable.morning_step_1,
-                R.drawable.morning_step_2,
-                R.drawable.morning_step_3,
-                R.drawable.morning_step_4,
-                R.drawable.morning_step_5
+                R.drawable.morning_exercise_1,
+                R.drawable.morning_exercise_2,
+                R.drawable.morning_exercise_3,
+                R.drawable.morning_exercise_4,
+                R.drawable.morning_exercise_5
+        };
+        final int[] explanations = {
+                R.raw.morning_step_1_intro,
+                R.raw.morning_step_2_intro,
+                R.raw.morning_step_3_intro,
+                R.raw.morning_step_4_intro,
+                R.raw.morning_step_5_intro
         };
         final String[] titles = {
-                "Станьте прямо",
-                "Потянитесь вверх",
-                "Разбудите плечи",
-                "Поверните корпус",
-                "Шагайте на месте"
+                "Стойка и дыхание",
+                "Потягивание вверх",
+                "Круги плечами назад",
+                "Повороты корпуса",
+                "Шаги на месте"
         };
-        final String[] voiceText = {
-                "Станьте прямо. Стопы поставьте на ширине таза, руки свободно опустите вдоль тела. Сделайте спокойный вдох.",
-                "Плавно поднимите руки вверх и потянитесь всем телом. Не прогибайтесь в пояснице. Дышите ровно.",
-                "Положите ладони на плечи. Медленно выполняйте круги локтями назад, не поднимая плечи к ушам.",
-                "Скрестите руки на груди. Медленно поверните корпус вправо, затем влево. Стопы остаются на месте.",
-                "Спокойно шагайте на месте и поочерёдно поднимайте колени. Сохраняйте удобный темп и ровное дыхание."
+        final String[] descriptions = {
+                "Начало: стопы на ширине таза, руки свободно опущены. Конец: вернитесь в ту же ровную стойку.",
+                "Начало: руки вдоль тела. Конец: плавно опустите руки и расслабьте плечи.",
+                "Начало: ладони на плечах. Конец: локти опущены, шея расслаблена.",
+                "Начало: руки скрещены на груди. Конец: вернитесь в центр, стопы остаются на месте.",
+                "Начало: обе стопы на полу. Конец: поставьте обе стопы и спокойно остановите шаг."
         };
-        final long stepDuration = 8000L;
+        final long exerciseDuration = 2L * 60L * 1000L;
+        final long countInterval = 20L * 1000L;
         final Dialog dialog = new Dialog(this);
         LinearLayout sheet = new LinearLayout(this);
         sheet.setOrientation(LinearLayout.VERTICAL);
@@ -855,31 +863,31 @@ public class MainActivity extends android.app.Activity {
         sheet.setBackground(round(SURFACE, 24));
 
         LinearLayout titleRow = row();
-        titleRow.addView(text("Разминка по шагам", 20, INK, true),
+        titleRow.addView(text("Разминка — 10 минут", 20, INK, true),
                 new LinearLayout.LayoutParams(0, -2, 1f));
         TextView close = linkButton("Закрыть");
         close.setOnClickListener(v -> dialog.dismiss());
         titleRow.addView(close, wrap());
         sheet.addView(titleRow, wrap());
-        sheet.addView(text("Картинка меняется каждые 8 секунд, а голос подсказывает движение.",
+        sheet.addView(text("Пять упражнений по 2 минуты. Первая панель показывает начало, последняя — завершение движения.",
                 13, MUTED, false), topMargin(4));
-        TextView voiceStatus = text("🔊 Диктор: подготовка русского голоса…", 12, SAGE, true);
-        voiceStatus.setGravity(Gravity.CENTER);
-        sheet.addView(voiceStatus, topMargin(7));
+        TextView audioStatus = text("🎙 AI-диктор: подготовка…", 12, SAGE, true);
+        audioStatus.setGravity(Gravity.CENTER);
+        sheet.addView(audioStatus, topMargin(7));
 
         ImageView image = new ImageView(this);
         image.setScaleType(ImageView.ScaleType.FIT_CENTER);
         image.setBackground(round(SAGE_LIGHT, 18));
-        image.setContentDescription("Текущий шаг утренней разминки");
+        image.setContentDescription("Пять последовательных картинок текущего упражнения: начало, движение и завершение");
         LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(245));
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(225));
         imageParams.topMargin = dp(13);
         sheet.addView(image, imageParams);
 
         TextView stepTitle = text("", 19, INK, true);
         stepTitle.setGravity(Gravity.CENTER);
-        sheet.addView(stepTitle, topMargin(12));
-        TextView explanation = text("", 14, MUTED, false);
+        sheet.addView(stepTitle, topMargin(11));
+        TextView explanation = text("", 13, MUTED, false);
         explanation.setGravity(Gravity.CENTER);
         sheet.addView(explanation, topMargin(4));
 
@@ -894,94 +902,127 @@ public class MainActivity extends android.app.Activity {
         progressParams.topMargin = dp(13);
         sheet.addView(progress, progressParams);
 
-        TextView control = actionButton("Пауза", false);
-        sheet.addView(control, topMargin(12));
-        sheet.addView(text("Остановитесь, если появляется боль или головокружение.",
-                12, MUTED, false), topMargin(8));
+        TextView timeStatus = text("Подготовка упражнения…", 13, SAGE_DARK, true);
+        timeStatus.setGravity(Gravity.CENTER);
+        sheet.addView(timeStatus, topMargin(8));
+        sheet.addView(text("Диктор объясняет движение, затем считает по пять повторов. После пятого упражнения голос замолкает.",
+                12, MUTED, false), topMargin(6));
 
         final Handler handler = new Handler(Looper.getMainLooper());
         final int[] current = {0};
-        final long[] startedAt = {android.os.SystemClock.uptimeMillis()};
-        final long[] pausedAt = {0L};
-        final boolean[] paused = {false};
+        final long[] startedAt = {0L};
+        final long[] nextCountAt = {0L};
         final boolean[] active = {true};
-        final boolean[] voiceReady = {false};
-        final TextToSpeech[] speech = {null};
-        final Runnable[] speakCurrent = new Runnable[1];
-        final Runnable[] updateStep = new Runnable[1];
+        final boolean[] exerciseRunning = {false};
+        final boolean[] completed = {false};
+        final MediaPlayer[] player = {null};
+        final Runnable[] beginStep = new Runnable[1];
+        final Runnable[] ticker = new Runnable[1];
 
-        speakCurrent[0] = () -> {
-            if (active[0] && voiceReady[0] && speech[0] != null) {
-                speech[0].speak(voiceText[current[0]], TextToSpeech.QUEUE_FLUSH,
-                        null, "morning_step_" + current[0]);
+        class AudioController {
+            void release() {
+                if (player[0] != null) {
+                    try {
+                        player[0].stop();
+                    } catch (IllegalStateException ignored) {
+                    }
+                    player[0].release();
+                    player[0] = null;
+                }
             }
-        };
-        updateStep[0] = () -> {
+
+            void play(int resourceId, Runnable after) {
+                release();
+                MediaPlayer media = MediaPlayer.create(MainActivity.this, resourceId);
+                if (media == null) {
+                    audioStatus.setText("🔈 Не удалось запустить AI-диктора — инструкция остаётся на экране");
+                    if (after != null && active[0]) after.run();
+                    return;
+                }
+                player[0] = media;
+                media.setOnCompletionListener(completedPlayer -> {
+                    if (player[0] == completedPlayer) player[0] = null;
+                    completedPlayer.release();
+                    if (after != null && active[0]) after.run();
+                });
+                media.setOnErrorListener((errorPlayer, what, extra) -> {
+                    if (player[0] == errorPlayer) player[0] = null;
+                    errorPlayer.release();
+                    audioStatus.setText("🔈 Аудио недоступно — инструкция остаётся на экране");
+                    if (after != null && active[0]) after.run();
+                    return true;
+                });
+                media.start();
+            }
+        }
+        AudioController audio = new AudioController();
+
+        beginStep[0] = () -> {
+            if (!active[0]) return;
+            exerciseRunning[0] = false;
+            startedAt[0] = 0L;
+            nextCountAt[0] = 0L;
             image.setImageResource(images[current[0]]);
             stepTitle.setText((current[0] + 1) + ". " + titles[current[0]]);
-            explanation.setText(voiceText[current[0]]);
+            explanation.setText(descriptions[current[0]]);
             progress.setProgress(0);
-            startedAt[0] = android.os.SystemClock.uptimeMillis();
-            speakCurrent[0].run();
+            timeStatus.setText("Сначала объяснение движения…");
+            audioStatus.setText("🎙 AI-диктор объясняет");
+            audio.play(explanations[current[0]], () -> {
+                if (!active[0]) return;
+                exerciseRunning[0] = true;
+                startedAt[0] = android.os.SystemClock.uptimeMillis();
+                nextCountAt[0] = countInterval;
+                timeStatus.setText("Осталось 2:00");
+                audioStatus.setText("🎙 AI-диктор считает повторы");
+                audio.play(R.raw.morning_count, null);
+            });
         };
 
-        final Runnable[] ticker = new Runnable[1];
         ticker[0] = () -> {
-            if (!dialog.isShowing()) return;
-            if (!paused[0]) {
+            if (!dialog.isShowing() || !active[0] || completed[0]) return;
+            if (exerciseRunning[0]) {
                 long elapsed = android.os.SystemClock.uptimeMillis() - startedAt[0];
-                int value = (int) Math.min(1000L, elapsed * 1000L / stepDuration);
+                long remaining = Math.max(0L, exerciseDuration - elapsed);
+                int value = (int) Math.min(1000L, elapsed * 1000L / exerciseDuration);
                 progress.setProgress(value);
-                if (elapsed >= stepDuration) {
-                    current[0] = (current[0] + 1) % images.length;
-                    updateStep[0].run();
+                timeStatus.setText(String.format(Locale.getDefault(), "Осталось %d:%02d",
+                        remaining / 60000L, (remaining / 1000L) % 60L));
+                if (elapsed >= exerciseDuration) {
+                    audio.release();
+                    exerciseRunning[0] = false;
+                    progress.setProgress(1000);
+                    if (current[0] + 1 < images.length) {
+                        current[0]++;
+                        beginStep[0].run();
+                    } else {
+                        completed[0] = true;
+                        timeStatus.setText("Все пять упражнений завершены");
+                        audioStatus.setText("🎙 AI-диктор завершает инструкцию");
+                        audio.play(R.raw.morning_complete, () -> {
+                            if (active[0]) audioStatus.setText("✓ Разминка окончена, диктор замолчал");
+                        });
+                    }
+                } else if (elapsed >= nextCountAt[0] && player[0] == null) {
+                    audio.play(R.raw.morning_count, null);
+                    nextCountAt[0] += countInterval;
                 }
             }
-            handler.postDelayed(ticker[0], 100L);
+            handler.postDelayed(ticker[0], 250L);
         };
 
-        control.setOnClickListener(v -> {
-            if (paused[0]) {
-                startedAt[0] += android.os.SystemClock.uptimeMillis() - pausedAt[0];
-                paused[0] = false;
-                control.setText("Пауза");
-                speakCurrent[0].run();
-            } else {
-                pausedAt[0] = android.os.SystemClock.uptimeMillis();
-                paused[0] = true;
-                if (speech[0] != null) speech[0].stop();
-                control.setText("Продолжить");
-            }
-        });
-
-        speech[0] = new TextToSpeech(this, status -> {
-            if (status == TextToSpeech.SUCCESS && speech[0] != null) {
-                int result = speech[0].setLanguage(new Locale("ru", "RU"));
-                voiceReady[0] = result != TextToSpeech.LANG_MISSING_DATA
-                        && result != TextToSpeech.LANG_NOT_SUPPORTED;
-                if (voiceReady[0]) {
-                    voiceStatus.setText("🔊 Диктор включён");
-                    speakCurrent[0].run();
-                } else {
-                    voiceStatus.setText("🔈 Русский голос не установлен — инструкция показана текстом");
-                }
-            } else {
-                voiceStatus.setText("🔈 Диктор недоступен — инструкция показана текстом");
-            }
-        });
-        updateStep[0].run();
-
+        image.setImageResource(images[0]);
+        stepTitle.setText("1. " + titles[0]);
+        explanation.setText(descriptions[0]);
         dialog.setContentView(sheet);
         dialog.setOnDismissListener(d -> {
             active[0] = false;
             handler.removeCallbacks(ticker[0]);
-            if (speech[0] != null) {
-                speech[0].stop();
-                speech[0].shutdown();
-            }
+            audio.release();
         });
         dialog.show();
         handler.post(ticker[0]);
+        audio.play(R.raw.morning_intro, beginStep[0]);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
