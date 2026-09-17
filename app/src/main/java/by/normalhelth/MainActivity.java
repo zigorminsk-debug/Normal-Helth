@@ -103,13 +103,13 @@ public class MainActivity extends android.app.Activity {
                         }),
                 new Meal(
                         "lunch", "Обед", "◒", 13 * 60,
-                        "Соберите полноценную тарелку: белок, овощи и крупа или картофель. Суп можно оставить отдельной небольшой порцией.",
+                        "Выберите одно основное блюдо, добавьте салат и при желании небольшую порцию супа. Вода — рядом.",
                         new String[]{"baked_draniki", "grechaniki_cabbage", "fish_grecha_beet", "holubtsy_grechka"},
                         new String[]{
-                                "Драники, запечённые в духовке, с курицей, йогуртовым соусом и салатом",
+                                "Драники, запечённые в духовке, с курицей и йогуртовым соусом",
                                 "Гречаники с тушёной капустой и морковью",
                                 "Запечённая рыба с гречкой, свёклой и зеленью",
-                                "Голубцы с мясом и гречкой, салат из свежей капусты"
+                                "Голубцы с мясом и гречкой"
                         }),
                 new Meal(
                         "dinner", "Ужин", "☾", 19 * 60,
@@ -473,6 +473,9 @@ public class MainActivity extends android.app.Activity {
         title.addView(time, wrap());
         card.addView(title, wrap());
         card.addView(text(meal.tip, 13, MUTED, false), topMargin(12));
+        if ("lunch".equals(meal.key)) {
+            card.addView(text("ОСНОВНОЕ БЛЮДО · выберите один вариант", 11, SAGE, true), topMargin(14));
+        }
 
         for (int i = 0; i < meal.dishes.length; i++) {
             final String dishId = meal.ids[i];
@@ -489,7 +492,54 @@ public class MainActivity extends android.app.Activity {
                     prefs.edit().putBoolean("dish_" + dishId, isChecked).apply());
             card.addView(checkBox, topMargin(5));
         }
+        if ("lunch".equals(meal.key)) addLunchComplements(card);
         return card;
+    }
+
+    private void addLunchComplements(LinearLayout card) {
+        View separator = new View(this);
+        separator.setBackgroundColor(LINE);
+        LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(1));
+        separatorParams.topMargin = dp(13);
+        card.addView(separator, separatorParams);
+
+        card.addView(text("Соберите полноценный обед", 17, INK, true), topMargin(14));
+        card.addView(text("Схема на выбор: одно основное блюдо + салат; суп — по аппетиту небольшой порцией.",
+                13, MUTED, false), topMargin(5));
+
+        card.addView(text("Суп · по желанию", 13, SAGE, true), topMargin(13));
+        addLunchComplement(card, "lunch_soup_shchi",
+                "Щи из свежей капусты с зеленью", false);
+        addLunchComplement(card, "lunch_soup_svekolnik",
+                "Свекольник с кефиром и зеленью", false);
+
+        card.addView(text("Салат · выберите один", 13, SAGE, true), topMargin(10));
+        addLunchComplement(card, "lunch_salad_cabbage",
+                "Салат из капусты, моркови и зелени", true);
+        addLunchComplement(card, "lunch_salad_beet",
+                "Свекольный салат с яблоком", false);
+        addLunchComplement(card, "lunch_salad_cucumber",
+                "Огурцы с зеленью и натуральным йогуртом", false);
+        addLunchComplement(card, "lunch_water",
+                "Вода или несладкий напиток", true);
+    }
+
+    private void addLunchComplement(LinearLayout card, String id, String label, boolean defaultChecked) {
+        String key = "dish_" + id;
+        if (!prefs.contains(key)) prefs.edit().putBoolean(key, defaultChecked).apply();
+        CheckBox checkBox = new CheckBox(this);
+        checkBox.setText(label);
+        checkBox.setTextSize(14);
+        checkBox.setTextColor(INK);
+        checkBox.setGravity(Gravity.CENTER_VERTICAL);
+        checkBox.setMinHeight(dp(42));
+        checkBox.setPadding(0, dp(3), 0, dp(3));
+        checkBox.setButtonTintList(checkTint());
+        checkBox.setChecked(prefs.getBoolean(key, defaultChecked));
+        checkBox.setOnCheckedChangeListener((buttonView, isChecked) ->
+                prefs.edit().putBoolean(key, isChecked).apply());
+        card.addView(checkBox, topMargin(3));
     }
 
     private View activityScreen() {
