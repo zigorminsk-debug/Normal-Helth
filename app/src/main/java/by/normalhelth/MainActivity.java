@@ -2,6 +2,7 @@ package by.normalhelth;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -59,7 +60,6 @@ public class MainActivity extends android.app.Activity {
     private static final int PEACH_LIGHT = Color.rgb(255, 240, 229);
     private static final int LAVENDER_LIGHT = Color.rgb(240, 238, 251);
     private static final int LINE = Color.rgb(229, 236, 231);
-    private static final String MORNING_VIDEO_URL = "https://www.youtube.com/watch?v=Y5jC8daStEc";
 
     private SharedPreferences prefs;
     private FrameLayout screenHolder;
@@ -393,8 +393,8 @@ public class MainActivity extends android.app.Activity {
                 13, MUTED, false), topMargin(7));
         exercise.addView(text("Выполняйте без рывков и остановитесь, если появляется боль или головокружение.",
                 12, MUTED, false), topMargin(5));
-        TextView video = actionButton("Смотреть видео-инструкцию", false);
-        video.setOnClickListener(v -> openMorningVideo());
+        TextView video = actionButton("Запустить 3D-анимацию", false);
+        video.setOnClickListener(v -> showMorningAnimation());
         exercise.addView(video, topMargin(11));
         LinearLayout.LayoutParams exerciseParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -806,12 +806,47 @@ public class MainActivity extends android.app.Activity {
                 .show();
     }
 
-    private void openMorningVideo() {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(MORNING_VIDEO_URL));
-            startActivity(intent);
-        } catch (Exception ignored) {
-            Toast.makeText(this, "Не удалось открыть видео. Проверьте подключение к интернету.", Toast.LENGTH_LONG).show();
+    private void showMorningAnimation() {
+        final Dialog dialog = new Dialog(this);
+        LinearLayout sheet = new LinearLayout(this);
+        sheet.setOrientation(LinearLayout.VERTICAL);
+        sheet.setPadding(dp(18), dp(16), dp(18), dp(16));
+        sheet.setBackground(round(SURFACE, 24));
+
+        LinearLayout titleRow = row();
+        titleRow.addView(text("Утренняя разминка", 20, INK, true),
+                new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView close = linkButton("Закрыть");
+        close.setOnClickListener(v -> dialog.dismiss());
+        titleRow.addView(close, wrap());
+        sheet.addView(titleRow, wrap());
+        sheet.addView(text("Собственная офлайн-анимация: три движения в спокойном темпе.",
+                13, MUTED, false), topMargin(4));
+
+        MorningExerciseView animation = new MorningExerciseView(this);
+        LinearLayout.LayoutParams animationParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(340));
+        animationParams.topMargin = dp(13);
+        sheet.addView(animation, animationParams);
+
+        sheet.addView(text("Потянитесь вверх → разбудите плечи → шагайте на месте. Нажмите на рисунок или кнопку, чтобы поставить анимацию на паузу.",
+                13, MUTED, false), topMargin(10));
+        TextView pause = actionButton("Пауза", false);
+        pause.setOnClickListener(v -> {
+            animation.toggle();
+            pause.setText(animation.isRunning() ? "Пауза" : "Продолжить");
+        });
+        sheet.addView(pause, topMargin(12));
+        sheet.addView(text("Выполняйте без боли и головокружения. При необходимости остановитесь и отдохните.",
+                12, MUTED, false), topMargin(9));
+
+        dialog.setContentView(sheet);
+        dialog.setOnDismissListener(d -> animation.stopAnimation());
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
     }
 
