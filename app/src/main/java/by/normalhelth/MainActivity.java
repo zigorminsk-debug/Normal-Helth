@@ -20,6 +20,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsets;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -171,7 +172,31 @@ public class MainActivity extends android.app.Activity {
         buildBottomNavigation();
         root.addView(bottomNavigation, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(76)));
+
+        // Android 15 draws app content edge-to-edge by default. Reserve the
+        // navigation-bar inset so the three-button/gesture area never covers
+        // the labels of the app's own bottom navigation.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            root.setOnApplyWindowInsetsListener((view, insets) -> {
+                int bottomInset;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    bottomInset = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
+                } else {
+                    bottomInset = insets.getSystemWindowInsetBottom();
+                }
+                LinearLayout.LayoutParams navigationParams =
+                        (LinearLayout.LayoutParams) bottomNavigation.getLayoutParams();
+                int desiredHeight = dp(76) + bottomInset;
+                if (navigationParams.height != desiredHeight) {
+                    navigationParams.height = desiredHeight;
+                    bottomNavigation.setLayoutParams(navigationParams);
+                }
+                bottomNavigation.setPadding(dp(10), dp(7), dp(10), dp(7) + bottomInset);
+                return insets;
+            });
+        }
         setContentView(root);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) root.requestApplyInsets();
     }
 
     private void buildBottomNavigation() {
@@ -312,10 +337,15 @@ public class MainActivity extends android.app.Activity {
 
         LinearLayout times = row();
         times.setPadding(0, dp(18), 0, dp(15));
+        times.setBaselineAligned(false);
         LinearLayout wake = metricColumn("Подъём", AppPrefs.timeLabel(AppPrefs.time(this, AppPrefs.WAKE_TIME, 7 * 60)));
         LinearLayout bed = metricColumn("Ложиться", AppPrefs.timeLabel(AlarmScheduler.bedtime(this)));
-        times.addView(wake, new LinearLayout.LayoutParams(0, -2, 1f));
-        times.addView(bed, new LinearLayout.LayoutParams(0, -2, 1f));
+        LinearLayout.LayoutParams wakeParams = new LinearLayout.LayoutParams(0, -2, 1f);
+        wakeParams.rightMargin = dp(12);
+        LinearLayout.LayoutParams bedParams = new LinearLayout.LayoutParams(0, -2, 1f);
+        bedParams.leftMargin = dp(12);
+        times.addView(wake, wakeParams);
+        times.addView(bed, bedParams);
         card.addView(times, wrap());
         card.addView(divider(), wrap());
         LinearLayout bottom = row();
@@ -332,8 +362,12 @@ public class MainActivity extends android.app.Activity {
     private LinearLayout metricColumn(String label, String value) {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.addView(text(label, 12, MUTED, false), wrap());
-        column.addView(text(value, 25, INK, true), topMargin(4));
+        TextView labelView = text(label, 12, MUTED, false);
+        labelView.setSingleLine(true);
+        TextView valueView = text(value, 25, INK, true);
+        valueView.setSingleLine(true);
+        column.addView(labelView, wrap());
+        column.addView(valueView, topMargin(4));
         return column;
     }
 
