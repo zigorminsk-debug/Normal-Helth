@@ -391,13 +391,13 @@ public class MainActivity extends android.app.Activity {
         LinearLayout exerciseTop = row();
         exerciseTop.addView(text("Упражнение для утра", 16, SAGE_DARK, true),
                 new LinearLayout.LayoutParams(0, -2, 1f));
-        exerciseTop.addView(pill("2 МИН/ШАГ", Color.WHITE, SAGE), wrap());
+        exerciseTop.addView(pill("ПО ПОРЯДКУ ВИДЕО", Color.WHITE, SAGE), wrap());
         exercise.addView(exerciseTop, wrap());
-        exercise.addView(text("Пять понятных этапов: стойка и дыхание, потягивание, плечи, повороты корпуса и шаги на месте.",
+        exercise.addView(text("Суставная зарядка по исходной последовательности: пальцы, запястья, локти, плечи, шея, позвоночник, таз, колени, голеностопы и дыхание.",
                 13, MUTED, false), topMargin(7));
-        exercise.addView(text("Каждый этап длится 2 минуты. Двигайтесь без рывков и остановитесь, если появляется боль или головокружение.",
+        exercise.addView(text("AI-диктор объясняет каждый этап и считает повторы. Двигайтесь без рывков и остановитесь при боли или головокружении.",
                 12, MUTED, false), topMargin(5));
-        TextView guide = actionButton("Запустить: картинки + диктор", false);
+        TextView guide = actionButton("Запустить полный комплекс", false);
         guide.setOnClickListener(v -> showMorningSteps());
         exercise.addView(guide, topMargin(11));
         LinearLayout.LayoutParams exerciseParams = new LinearLayout.LayoutParams(
@@ -405,19 +405,19 @@ public class MainActivity extends android.app.Activity {
         exerciseParams.topMargin = dp(16);
         card.addView(exercise, exerciseParams);
 
-        card.addView(text("Пошаговая анимация с AI-диктором", 16, INK, true), topMargin(17));
+        card.addView(text("Пошаговая последовательность как в видео", 16, INK, true), topMargin(17));
         ImageView sequence = new ImageView(this);
-        sequence.setImageResource(R.drawable.morning_sequence);
+        sequence.setImageResource(R.drawable.morning_original_01_fingers);
         sequence.setScaleType(ImageView.ScaleType.FIT_CENTER);
         sequence.setAdjustViewBounds(true);
         sequence.setClickable(true);
-        sequence.setContentDescription("Нажмите, чтобы запустить пять картинок по очереди с голосовой подсказкой");
+        sequence.setContentDescription("Нажмите, чтобы запустить суставную разминку по порядку исходного видео");
         sequence.setOnClickListener(v -> showMorningSteps());
         LinearLayout.LayoutParams sequenceParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(156));
         sequenceParams.topMargin = dp(7);
         card.addView(sequence, sequenceParams);
-        card.addView(text("Нажмите на картинки или кнопку выше: каждый этап длится 2 минуты, AI-диктор объясняет движение и считает повторы.",
+        card.addView(text("Пальцы → запястья → локти и плечи → шея → позвоночник → таз → колени → голеностопы → дыхание → поклон. Нажмите для запуска.",
                 12, MUTED, false), topMargin(5));
         return card;
     }
@@ -827,85 +827,87 @@ public class MainActivity extends android.app.Activity {
 
     private void showMorningSteps() {
         final int[][] frames = {
-                {
-                        R.drawable.morning_exercise_1_1,
-                        R.drawable.morning_exercise_1_2,
-                        R.drawable.morning_exercise_1_3,
-                        R.drawable.morning_exercise_1_4,
-                        R.drawable.morning_exercise_1_5
-                },
-                {
-                        R.drawable.morning_exercise_2_1,
-                        R.drawable.morning_exercise_2_2,
-                        R.drawable.morning_exercise_2_3,
-                        R.drawable.morning_exercise_2_4,
-                        R.drawable.morning_exercise_2_5
-                },
-                {
-                        R.drawable.morning_exercise_3_1,
-                        R.drawable.morning_exercise_3_2,
-                        R.drawable.morning_exercise_3_3,
-                        R.drawable.morning_exercise_3_4,
-                        R.drawable.morning_exercise_3_5
-                },
-                {
-                        R.drawable.morning_exercise_4_1,
-                        R.drawable.morning_exercise_4_2,
-                        R.drawable.morning_exercise_4_3,
-                        R.drawable.morning_exercise_4_4,
-                        R.drawable.morning_exercise_4_5
-                },
-                {
-                        R.drawable.morning_exercise_5_1,
-                        R.drawable.morning_exercise_5_2,
-                        R.drawable.morning_exercise_5_3,
-                        R.drawable.morning_exercise_5_4,
-                        R.drawable.morning_exercise_5_5
-                }
+                {R.drawable.morning_routine_01_1, R.drawable.morning_routine_01_2,
+                        R.drawable.morning_routine_01_3, R.drawable.morning_routine_01_4,
+                        R.drawable.morning_routine_01_5},
+                {R.drawable.morning_routine_02_1, R.drawable.morning_routine_02_2,
+                        R.drawable.morning_routine_02_3, R.drawable.morning_routine_02_4,
+                        R.drawable.morning_routine_02_5},
+                {R.drawable.morning_routine_03_1, R.drawable.morning_routine_03_2,
+                        R.drawable.morning_routine_03_3, R.drawable.morning_routine_03_4,
+                        R.drawable.morning_routine_03_5},
+                {R.drawable.morning_routine_04_1, R.drawable.morning_routine_04_2,
+                        R.drawable.morning_routine_04_3, R.drawable.morning_routine_04_4,
+                        R.drawable.morning_routine_04_5},
+                {R.drawable.morning_routine_05_1, R.drawable.morning_routine_05_2,
+                        R.drawable.morning_routine_05_3, R.drawable.morning_routine_05_4,
+                        R.drawable.morning_routine_05_5},
+                {R.drawable.morning_routine_06_1, R.drawable.morning_routine_06_2,
+                        R.drawable.morning_routine_06_3, R.drawable.morning_routine_06_4,
+                        R.drawable.morning_routine_06_5},
+                {R.drawable.morning_routine_07_1, R.drawable.morning_routine_07_2,
+                        R.drawable.morning_routine_07_3, R.drawable.morning_routine_07_4,
+                        R.drawable.morning_routine_07_5},
+                {R.drawable.morning_routine_08_1, R.drawable.morning_routine_08_2,
+                        R.drawable.morning_routine_08_3, R.drawable.morning_routine_08_4,
+                        R.drawable.morning_routine_08_5},
+                {R.drawable.morning_routine_09_1, R.drawable.morning_routine_09_2,
+                        R.drawable.morning_routine_09_3, R.drawable.morning_routine_09_4,
+                        R.drawable.morning_routine_09_5},
+                {R.drawable.morning_routine_10_1, R.drawable.morning_routine_10_2,
+                        R.drawable.morning_routine_10_3, R.drawable.morning_routine_10_4,
+                        R.drawable.morning_routine_10_5}
         };
-        final int[] explanations = {
-                R.raw.morning_step_1_intro,
-                R.raw.morning_step_2_intro,
-                R.raw.morning_step_3_intro,
-                R.raw.morning_step_4_intro,
-                R.raw.morning_step_5_intro
+        final int[] phaseAudio = {
+                R.raw.original_phase_01_fingers,
+                R.raw.original_phase_02_wrists,
+                R.raw.original_phase_03_elbows_shoulders,
+                R.raw.original_phase_04_neck_turn,
+                R.raw.original_phase_05_neck_tilt,
+                R.raw.original_phase_06_spine_twist,
+                R.raw.original_phase_07_round_back,
+                R.raw.original_phase_08_torso_pelvis,
+                R.raw.original_phase_09_knees_ankles,
+                R.raw.original_phase_10_breath_finish
         };
         final String[] titles = {
-                "Стойка и дыхание",
-                "Потягивание вверх",
-                "Круги плечами назад",
-                "Повороты корпуса",
-                "Шаги на месте"
+                "Пальцы",
+                "Запястья",
+                "Локти и плечи",
+                "Повороты головы",
+                "Наклоны головы",
+                "Грудной отдел позвоночника",
+                "Округление спины и раскатывание",
+                "Туловище и таз",
+                "Колени и голеностопы",
+                "Дыхание и поклон"
         };
         final String[] descriptions = {
-                "Начало: стопы на ширине таза, руки свободно опущены. Конец: вернитесь в ту же ровную стойку.",
-                "Начало: руки вдоль тела. Конец: плавно опустите руки и расслабьте плечи.",
-                "Начало: ладони на плечах. Конец: локти опущены, шея расслаблена.",
-                "Начало: руки скрещены на груди. Конец: вернитесь в центр, стопы остаются на месте.",
-                "Начало: обе стопы на полу. Конец: поставьте обе стопы и спокойно остановите шаг."
+                "Начало: руки свободно опущены. Сжимайте и раскрывайте пальцы, затем по очереди соединяйте большой палец с остальными.",
+                "Начало: локти мягко согнуты. Крутите запястья в одну сторону, затем без рывка поменяйте направление.",
+                "Начало: руки согнуты у плеч. Сначала круги локтями, затем круги плечами в обе стороны.",
+                "Начало: лицо прямо, плечи неподвижны. Плавно смотрите вправо, в центр и влево.",
+                "Начало: голова в центре. Мягко наклоняйте её вправо и влево, не поднимая плечи.",
+                "Начало: вес на опорной ноге. Поворачивайте грудной отдел, оставляя таз устойчивым.",
+                "Начало: пальцы за головой. Округлите верх спины с дыханием, затем медленно раскатайте позвоночник.",
+                "Начало: руки на талии. Выполните круги туловищем, затем тазом в обе стороны.",
+                "Начало: стопы вместе. Круги коленями, затем вращение голеностопа с опорой.",
+                "Начало: стойка и руки на рёбрах. Три дыхательных цикла, дыхание животом и спокойный поклон."
         };
-        final int[] cadenceAudio = {
-                R.raw.morning_breath_cycle,
-                R.raw.morning_stretch_cycle,
-                R.raw.morning_shoulder_cycle,
-                R.raw.morning_turn_cycle,
-                R.raw.morning_march_cycle
+        // These are approximate positions inside each generated audio track. The audio track
+        // itself controls when the next phase starts; the same start time drives these frames.
+        final double[][] frameProgress = {
+                {0.20, 0.39, 0.70, 0.88},
+                {0.18, 0.36, 0.62, 0.82},
+                {0.18, 0.36, 0.62, 0.82},
+                {0.18, 0.36, 0.62, 0.82},
+                {0.18, 0.36, 0.62, 0.82},
+                {0.18, 0.38, 0.62, 0.82},
+                {0.20, 0.40, 0.65, 0.84},
+                {0.18, 0.37, 0.63, 0.82},
+                {0.18, 0.37, 0.64, 0.83},
+                {0.20, 0.40, 0.62, 0.84}
         };
-        final long[] cadenceInterval = {
-                18L * 1000L,
-                12L * 1000L,
-                12L * 1000L,
-                12L * 1000L,
-                8L * 1000L
-        };
-        final long[][] frameBoundaries = {
-                {3_000L, 5_000L, 11_000L, 13_000L},
-                {2_000L, 4_000L, 7_000L, 9_000L},
-                {2_000L, 4_000L, 7_000L, 9_000L},
-                {2_000L, 4_000L, 7_000L, 9_000L},
-                {1_500L, 3_000L, 4_500L, 6_000L}
-        };
-        final long exerciseDuration = 2L * 60L * 1000L;
         final Dialog dialog = new Dialog(this);
         LinearLayout sheet = new LinearLayout(this);
         sheet.setOrientation(LinearLayout.VERTICAL);
@@ -913,13 +915,13 @@ public class MainActivity extends android.app.Activity {
         sheet.setBackground(round(SURFACE, 24));
 
         LinearLayout titleRow = row();
-        titleRow.addView(text("Разминка — 10 минут", 20, INK, true),
+        titleRow.addView(text("Суставная разминка по порядку", 20, INK, true),
                 new LinearLayout.LayoutParams(0, -2, 1f));
         TextView close = linkButton("Закрыть");
         close.setOnClickListener(v -> dialog.dismiss());
         titleRow.addView(close, wrap());
         sheet.addView(titleRow, wrap());
-        sheet.addView(text("Пять упражнений по 2 минуты. Первая панель показывает начало, последняя — завершение движения.",
+        sheet.addView(text("Порядок повторяет исходный аудиоряд: от пальцев вверх по позвоночнику и затем вниз к голеностопам, дыханию и поклону.",
                 13, MUTED, false), topMargin(4));
         TextView audioStatus = text("🎙 AI-диктор: подготовка…", 12, SAGE, true);
         audioStatus.setGravity(Gravity.CENTER);
@@ -928,15 +930,15 @@ public class MainActivity extends android.app.Activity {
         ImageView image = new ImageView(this);
         image.setScaleType(ImageView.ScaleType.FIT_CENTER);
         image.setBackground(round(SAGE_LIGHT, 18));
-        image.setContentDescription("Пять последовательных картинок текущего упражнения: начало, движение и завершение");
+        image.setContentDescription("Кадр текущего упражнения: начало, движение или завершение");
         LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(225));
         imageParams.topMargin = dp(13);
         sheet.addView(image, imageParams);
 
-        TextView stepTitle = text("", 19, INK, true);
-        stepTitle.setGravity(Gravity.CENTER);
-        sheet.addView(stepTitle, topMargin(11));
+        TextView phaseTitle = text("", 19, INK, true);
+        phaseTitle.setGravity(Gravity.CENTER);
+        sheet.addView(phaseTitle, topMargin(11));
         TextView explanation = text("", 13, MUTED, false);
         explanation.setGravity(Gravity.CENTER);
         sheet.addView(explanation, topMargin(4));
@@ -952,27 +954,38 @@ public class MainActivity extends android.app.Activity {
         progressParams.topMargin = dp(13);
         sheet.addView(progress, progressParams);
 
-        TextView timeStatus = text("Подготовка упражнения…", 13, SAGE_DARK, true);
+        TextView timeStatus = text("Подготовка этапа…", 13, SAGE_DARK, true);
         timeStatus.setGravity(Gravity.CENTER);
         sheet.addView(timeStatus, topMargin(8));
-        TextView repetitionStatus = text("Ритм: подготовка", 13, SAGE, true);
+        TextView repetitionStatus = text("Аудиоряд: этап 1 из 10", 13, SAGE, true);
         repetitionStatus.setGravity(Gravity.CENTER);
         sheet.addView(repetitionStatus, topMargin(4));
-        sheet.addView(text("Дыхание: вдох через нос 3 секунды, комфортная задержка 2, длинный выдох 6 и тихая пауза 2. В движениях вдох перед усилием, выдох во время усилия. Не задерживайте дыхание через силу.",
+        sheet.addView(text("Не ускоряйте движение. На усилии мягко выдыхайте, между повторами дышите свободно. При боли остановитесь.",
                 12, MUTED, false), topMargin(6));
 
         final Handler handler = new Handler(Looper.getMainLooper());
         final int[] current = {0};
         final int[] frameIndex = {0};
-        final int[] cadenceNumber = {0};
-        final long[] startedAt = {0L};
-        final long[] nextCueAt = {0L};
+        final long[] phaseStartedAt = {0L};
+        final long[] phaseDuration = {1000L};
+        final int[] frameToken = {0};
         final boolean[] active = {true};
-        final boolean[] exerciseRunning = {false};
+        final boolean[] phasePlaying = {false};
         final boolean[] completed = {false};
         final MediaPlayer[] player = {null};
-        final Runnable[] beginStep = new Runnable[1];
+        final Runnable[] beginPhase = new Runnable[1];
+        final Runnable[] scheduleFrames = new Runnable[1];
+        final Runnable[] cancelFrames = new Runnable[1];
         final Runnable[] ticker = new Runnable[1];
+        final Runnable[] frameTasks = new Runnable[4];
+
+        cancelFrames[0] = () -> {
+            frameToken[0]++;
+            for (int i = 0; i < frameTasks.length; i++) {
+                if (frameTasks[i] != null) handler.removeCallbacks(frameTasks[i]);
+                frameTasks[i] = null;
+            }
+        };
 
         class AudioController {
             void release() {
@@ -990,11 +1003,16 @@ public class MainActivity extends android.app.Activity {
                 release();
                 MediaPlayer media = MediaPlayer.create(MainActivity.this, resourceId);
                 if (media == null) {
-                    audioStatus.setText("🔈 Не удалось запустить AI-диктора — инструкция остаётся на экране");
-                    if (after != null && active[0]) after.run();
+                    audioStatus.setText("🔈 Аудио недоступно — текст инструкции остаётся на экране");
+                    if (after != null && active[0]) handler.postDelayed(after, 500L);
                     return;
                 }
                 player[0] = media;
+                if (phasePlaying[0]) {
+                    phaseDuration[0] = Math.max(1000L, media.getDuration());
+                    phaseStartedAt[0] = android.os.SystemClock.uptimeMillis();
+                    scheduleFrames[0].run();
+                }
                 media.setOnCompletionListener(completedPlayer -> {
                     if (player[0] == completedPlayer) player[0] = null;
                     completedPlayer.release();
@@ -1003,7 +1021,7 @@ public class MainActivity extends android.app.Activity {
                 media.setOnErrorListener((errorPlayer, what, extra) -> {
                     if (player[0] == errorPlayer) player[0] = null;
                     errorPlayer.release();
-                    audioStatus.setText("🔈 Аудио недоступно — инструкция остаётся на экране");
+                    audioStatus.setText("🔈 Аудио недоступно — текст инструкции остаётся на экране");
                     if (after != null && active[0]) after.run();
                     return true;
                 });
@@ -1012,98 +1030,82 @@ public class MainActivity extends android.app.Activity {
         }
         AudioController audio = new AudioController();
 
-        beginStep[0] = () -> {
-            if (!active[0]) return;
-            exerciseRunning[0] = false;
+        scheduleFrames[0] = () -> {
+            cancelFrames[0].run();
             frameIndex[0] = 0;
-            cadenceNumber[0] = 0;
-            startedAt[0] = 0L;
-            nextCueAt[0] = 0L;
-            image.setImageResource(frames[current[0]][frameIndex[0]]);
-            image.setContentDescription("Упражнение " + (current[0] + 1)
-                    + ", кадр 1 из 5: начало движения");
-            stepTitle.setText((current[0] + 1) + ". " + titles[current[0]]);
+            image.setImageResource(frames[current[0]][0]);
+            image.setContentDescription("Этап " + (current[0] + 1) + ", кадр 1 из 5: начало");
+            final int token = frameToken[0];
+            for (int i = 0; i < 4; i++) {
+                final int nextFrame = i + 1;
+                long delay = (long) (phaseDuration[0] * frameProgress[current[0]][i]);
+                frameTasks[i] = () -> {
+                    if (active[0] && phasePlaying[0] && frameToken[0] == token) {
+                        frameIndex[0] = nextFrame;
+                        image.setImageResource(frames[current[0]][nextFrame]);
+                        image.setContentDescription("Этап " + (current[0] + 1)
+                                + ", кадр " + (nextFrame + 1) + " из 5");
+                    }
+                };
+                handler.postDelayed(frameTasks[i], delay);
+            }
+        };
+
+        beginPhase[0] = () -> {
+            if (!active[0]) return;
+            phasePlaying[0] = true;
+            frameIndex[0] = 0;
+            phaseTitle.setText((current[0] + 1) + ". " + titles[current[0]]);
             explanation.setText(descriptions[current[0]]);
             progress.setProgress(0);
-            timeStatus.setText("Сначала объяснение движения…");
-            audioStatus.setText("🎙 AI-диктор объясняет");
-            audio.play(explanations[current[0]], () -> {
+            timeStatus.setText("Слушайте объяснение и повторяйте движение");
+            repetitionStatus.setText("Аудиоряд: этап " + (current[0] + 1) + " из " + phaseAudio.length);
+            audioStatus.setText("🎙 AI-диктор объясняет и считает");
+            audio.play(phaseAudio[current[0]], () -> {
                 if (!active[0]) return;
-                exerciseRunning[0] = true;
-                cadenceNumber[0] = 0;
-                startedAt[0] = android.os.SystemClock.uptimeMillis();
-                nextCueAt[0] = 0L;
-                timeStatus.setText("Осталось 2:00");
-                repetitionStatus.setText("Ритм: ждём первый сигнал");
-                audioStatus.setText("🎙 AI-диктор ведёт ритм и повторы");
+                phasePlaying[0] = false;
+                cancelFrames[0].run();
+                progress.setProgress(1000);
+                if (current[0] + 1 < phaseAudio.length) {
+                    current[0]++;
+                    beginPhase[0].run();
+                } else {
+                    completed[0] = true;
+                    timeStatus.setText("Весь комплекс завершён");
+                    repetitionStatus.setText("Этап 10 из 10 выполнен");
+                    audioStatus.setText("🎙 AI-диктор завершает комплекс");
+                    audio.play(R.raw.morning_complete, () -> {
+                        if (active[0]) audioStatus.setText("✓ Комплекс окончен, диктор замолчал");
+                    });
+                }
             });
         };
 
         ticker[0] = () -> {
             if (!dialog.isShowing() || !active[0] || completed[0]) return;
-            if (exerciseRunning[0]) {
-                long elapsed = android.os.SystemClock.uptimeMillis() - startedAt[0];
-                long remaining = Math.max(0L, exerciseDuration - elapsed);
-                long cycleElapsed = elapsed % cadenceInterval[current[0]];
-                int nextFrame = 0;
-                while (nextFrame < 4
-                        && cycleElapsed >= frameBoundaries[current[0]][nextFrame]) {
-                    nextFrame++;
-                }
-                if (nextFrame != frameIndex[0]) {
-                    frameIndex[0] = nextFrame;
-                    image.setImageResource(frames[current[0]][frameIndex[0]]);
-                    image.setContentDescription("Упражнение " + (current[0] + 1)
-                            + ", кадр " + (frameIndex[0] + 1) + " из 5");
-                }
-                int value = (int) Math.min(1000L, elapsed * 1000L / exerciseDuration);
-                progress.setProgress(value);
-                timeStatus.setText(String.format(Locale.getDefault(), "Осталось %d:%02d",
-                        remaining / 60000L, (remaining / 1000L) % 60L));
-                if (elapsed >= exerciseDuration) {
-                    audio.release();
-                    exerciseRunning[0] = false;
-                    progress.setProgress(1000);
-                    if (current[0] + 1 < frames.length) {
-                        current[0]++;
-                        beginStep[0].run();
-                    } else {
-                        completed[0] = true;
-                        timeStatus.setText("Все пять упражнений завершены");
-                        audioStatus.setText("🎙 AI-диктор завершает инструкцию");
-                        audio.play(R.raw.morning_complete, () -> {
-                            if (active[0]) audioStatus.setText("✓ Разминка окончена, диктор замолчал");
-                        });
-                    }
-                } else if (elapsed >= nextCueAt[0] && player[0] == null) {
-                    cadenceNumber[0]++;
-                    if (current[0] == 0) {
-                        repetitionStatus.setText("Дыхательный цикл " + cadenceNumber[0]
-                                + " · вдох — задержка — выдох");
-                    } else {
-                        repetitionStatus.setText("Повтор " + cadenceNumber[0]
-                                + " · начало — движение — возврат");
-                    }
-                    audio.play(cadenceAudio[current[0]], null);
-                    nextCueAt[0] = elapsed + cadenceInterval[current[0]];
-                }
+            if (phasePlaying[0]) {
+                long elapsed = android.os.SystemClock.uptimeMillis() - phaseStartedAt[0];
+                long remaining = Math.max(0L, phaseDuration[0] - elapsed);
+                progress.setProgress((int) Math.min(1000L,
+                        elapsed * 1000L / phaseDuration[0]));
+                timeStatus.setText(String.format(Locale.getDefault(),
+                        "Этап %d из 10 · осталось примерно %d:%02d",
+                        current[0] + 1, remaining / 60000L, (remaining / 1000L) % 60L));
             }
-            handler.postDelayed(ticker[0], 250L);
+            handler.postDelayed(ticker[0], 100L);
         };
 
-        image.setImageResource(frames[0][0]);
-        image.setContentDescription("Упражнение 1, кадр 1 из 5: начало движения");
-        stepTitle.setText("1. " + titles[0]);
-        explanation.setText(descriptions[0]);
         dialog.setContentView(sheet);
         dialog.setOnDismissListener(d -> {
             active[0] = false;
+            phasePlaying[0] = false;
             handler.removeCallbacks(ticker[0]);
+            cancelFrames[0].run();
             audio.release();
         });
         dialog.show();
         handler.post(ticker[0]);
-        audio.play(R.raw.morning_intro, beginStep[0]);
+        beginPhase[0].run();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
