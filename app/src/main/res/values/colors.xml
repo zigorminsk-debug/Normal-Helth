@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#20352E</color>
+    <color name="ink_muted">#6B7D76</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="background">#F5F8F4</color>
+    <color name="sage">#2F6B53</color>
+    <color name="sage_dark">#1F4D3B</color>
+    <color name="sage_light">#E1EEE5</color>
+    <color name="mint">#B9DCC5</color>
+    <color name="peach">#F4D4B9</color>
+    <color name="peach_light">#FFF0E5</color>
+    <color name="lavender">#DCD8F2</color>
+    <color name="lavender_light">#F0EEFB</color>
+    <color name="line">#E5ECE7</color>
+    <color name="white">#FFFFFF</color>
+</resources>
