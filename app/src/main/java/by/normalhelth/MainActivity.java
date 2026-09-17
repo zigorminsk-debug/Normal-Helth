@@ -25,9 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowInsets;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -67,7 +64,6 @@ public class MainActivity extends android.app.Activity {
     private static final int PEACH_LIGHT = Color.rgb(255, 240, 229);
     private static final int LAVENDER_LIGHT = Color.rgb(240, 238, 251);
     private static final int LINE = Color.rgb(229, 236, 231);
-    private static final String SOURCE_VIDEO_URL = "https://www.youtube.com/embed/Y5jC8daStEc?playsinline=1&rel=0";
 
     private SharedPreferences prefs;
     private FrameLayout screenHolder;
@@ -395,34 +391,33 @@ public class MainActivity extends android.app.Activity {
         LinearLayout exerciseTop = row();
         exerciseTop.addView(text("Упражнение для утра", 16, SAGE_DARK, true),
                 new LinearLayout.LayoutParams(0, -2, 1f));
-        exerciseTop.addView(pill("3 МИН", Color.WHITE, SAGE), wrap());
+        exerciseTop.addView(pill("8 СЕК/ШАГ", Color.WHITE, SAGE), wrap());
         exercise.addView(exerciseTop, wrap());
         exercise.addView(text("Мягкая активация тела: потянитесь вверх 3 раза, сделайте 5 кругов плечами назад и спокойно шагайте на месте 60 секунд.",
                 13, MUTED, false), topMargin(7));
         exercise.addView(text("Выполняйте без рывков и остановитесь, если появляется боль или головокружение.",
                 12, MUTED, false), topMargin(5));
-        TextView guide = actionButton("Старт: картинки + голос", false);
+        TextView guide = actionButton("Запустить: картинки + диктор", false);
         guide.setOnClickListener(v -> showMorningSteps());
         exercise.addView(guide, topMargin(11));
-        TextView animationLink = linkButton("Открыть 3D-анимацию");
-        animationLink.setOnClickListener(v -> showMorningAnimation());
-        exercise.addView(animationLink, topMargin(7));
         LinearLayout.LayoutParams exerciseParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         exerciseParams.topMargin = dp(16);
         card.addView(exercise, exerciseParams);
 
-        card.addView(text("Разбор движения по шагам", 16, INK, true), topMargin(17));
+        card.addView(text("Пошаговая анимация с диктором", 16, INK, true), topMargin(17));
         ImageView sequence = new ImageView(this);
         sequence.setImageResource(R.drawable.morning_sequence);
         sequence.setScaleType(ImageView.ScaleType.FIT_CENTER);
         sequence.setAdjustViewBounds(true);
-        sequence.setContentDescription("Пять картинок с последовательностью утренней разминки");
+        sequence.setClickable(true);
+        sequence.setContentDescription("Нажмите, чтобы запустить пять картинок по очереди с голосовой подсказкой");
+        sequence.setOnClickListener(v -> showMorningSteps());
         LinearLayout.LayoutParams sequenceParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(156));
         sequenceParams.topMargin = dp(7);
         card.addView(sequence, sequenceParams);
-        card.addView(text("1. Стойка  ·  2. Потянуться  ·  3. Плечи  ·  4. Поворот  ·  5. Шаги на месте",
+        card.addView(text("Нажмите на картинки или кнопку выше: каждый кадр держится 8 секунд, диктор сразу объясняет движение.",
                 12, MUTED, false), topMargin(5));
         return card;
     }
@@ -868,6 +863,9 @@ public class MainActivity extends android.app.Activity {
         sheet.addView(titleRow, wrap());
         sheet.addView(text("Картинка меняется каждые 8 секунд, а голос подсказывает движение.",
                 13, MUTED, false), topMargin(4));
+        TextView voiceStatus = text("🔊 Диктор: подготовка русского голоса…", 12, SAGE, true);
+        voiceStatus.setGravity(Gravity.CENTER);
+        sheet.addView(voiceStatus, topMargin(7));
 
         ImageView image = new ImageView(this);
         image.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -906,13 +904,14 @@ public class MainActivity extends android.app.Activity {
         final long[] startedAt = {android.os.SystemClock.uptimeMillis()};
         final long[] pausedAt = {0L};
         final boolean[] paused = {false};
+        final boolean[] active = {true};
         final boolean[] voiceReady = {false};
         final TextToSpeech[] speech = {null};
         final Runnable[] speakCurrent = new Runnable[1];
         final Runnable[] updateStep = new Runnable[1];
 
         speakCurrent[0] = () -> {
-            if (voiceReady[0] && speech[0] != null) {
+            if (active[0] && voiceReady[0] && speech[0] != null) {
                 speech[0].speak(voiceText[current[0]], TextToSpeech.QUEUE_FLUSH,
                         null, "morning_step_" + current[0]);
             }
@@ -960,14 +959,21 @@ public class MainActivity extends android.app.Activity {
                 int result = speech[0].setLanguage(new Locale("ru", "RU"));
                 voiceReady[0] = result != TextToSpeech.LANG_MISSING_DATA
                         && result != TextToSpeech.LANG_NOT_SUPPORTED;
-                if (voiceReady[0]) speakCurrent[0].run();
+                if (voiceReady[0]) {
+                    voiceStatus.setText("🔊 Диктор включён");
+                    speakCurrent[0].run();
+                } else {
+                    voiceStatus.setText("🔈 Русский голос не установлен — инструкция показана текстом");
+                }
+            } else {
+                voiceStatus.setText("🔈 Диктор недоступен — инструкция показана текстом");
             }
         });
         updateStep[0].run();
-        handler.post(ticker[0]);
 
         dialog.setContentView(sheet);
         dialog.setOnDismissListener(d -> {
+            active[0] = false;
             handler.removeCallbacks(ticker[0]);
             if (speech[0] != null) {
                 speech[0].stop();
@@ -975,95 +981,7 @@ public class MainActivity extends android.app.Activity {
             }
         });
         dialog.show();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-            int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
-            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
-        }
-    }
-
-    private void showMorningAnimation() {
-        final Dialog dialog = new Dialog(this);
-        LinearLayout sheet = new LinearLayout(this);
-        sheet.setOrientation(LinearLayout.VERTICAL);
-        sheet.setPadding(dp(18), dp(16), dp(18), dp(16));
-        sheet.setBackground(round(SURFACE, 24));
-
-        LinearLayout titleRow = row();
-        titleRow.addView(text("Утренняя разминка", 20, INK, true),
-                new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView close = linkButton("Закрыть");
-        close.setOnClickListener(v -> dialog.dismiss());
-        titleRow.addView(close, wrap());
-        sheet.addView(titleRow, wrap());
-        sheet.addView(text("Собственная офлайн-анимация: понятная короткая разминка. Полная последовательность из видео — пальцы, запястья, локти, плечи, голова, позвоночник, таз, колени и голеностопы.",
-                13, MUTED, false), topMargin(4));
-
-        MorningExerciseView animation = new MorningExerciseView(this);
-        LinearLayout.LayoutParams animationParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(340));
-        animationParams.topMargin = dp(13);
-        sheet.addView(animation, animationParams);
-
-        sheet.addView(text("Потянитесь вверх → разбудите плечи → шагайте на месте. Нажмите на рисунок или кнопку, чтобы поставить анимацию на паузу.",
-                13, MUTED, false), topMargin(10));
-        TextView pause = actionButton("Пауза", false);
-        pause.setOnClickListener(v -> {
-            animation.toggle();
-            pause.setText(animation.isRunning() ? "Пауза" : "Продолжить");
-        });
-        sheet.addView(pause, topMargin(12));
-        TextView sourceVideo = actionButton("Открыть исходное видео внутри приложения", false);
-        sourceVideo.setOnClickListener(v -> showSourceVideo());
-        sheet.addView(sourceVideo, topMargin(12));
-        sheet.addView(text("Для исходного видео нужен интернет. Собственная анимация работает офлайн.",
-                12, MUTED, false), topMargin(6));
-        sheet.addView(text("Выполняйте без боли и головокружения. При необходимости остановитесь и отдохните.",
-                12, MUTED, false), topMargin(7));
-
-        dialog.setContentView(sheet);
-        dialog.setOnDismissListener(d -> animation.stopAnimation());
-        dialog.show();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-            int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
-            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
-        }
-    }
-
-    private void showSourceVideo() {
-        final Dialog dialog = new Dialog(this);
-        LinearLayout sheet = new LinearLayout(this);
-        sheet.setOrientation(LinearLayout.VERTICAL);
-        sheet.setPadding(dp(14), dp(14), dp(14), dp(14));
-        sheet.setBackground(round(Color.BLACK, 20));
-
-        LinearLayout titleRow = row();
-        titleRow.addView(text("Видео-инструкция", 18, Color.WHITE, true),
-                new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView close = linkButton("Закрыть");
-        close.setTextColor(Color.WHITE);
-        close.setOnClickListener(v -> dialog.dismiss());
-        titleRow.addView(close, wrap());
-        sheet.addView(titleRow, wrap());
-
-        WebView webView = new WebView(this);
-        webView.setBackgroundColor(Color.BLACK);
-        webView.setWebViewClient(new WebViewClient());
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setMediaPlaybackRequiresUserGesture(true);
-        webView.loadUrl(SOURCE_VIDEO_URL);
-        sheet.addView(webView, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(235)));
-
-        dialog.setContentView(sheet);
-        dialog.setOnDismissListener(d -> {
-            webView.loadUrl("about:blank");
-            webView.destroy();
-        });
-        dialog.show();
+        handler.post(ticker[0]);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             int width = Math.min(getResources().getDisplayMetrics().widthPixels - dp(24), dp(430));
