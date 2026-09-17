@@ -8,32 +8,39 @@ import android.graphics.Paint;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.os.SystemClock;
 import android.view.View;
 
 /**
- * A small offline pseudo-3D exercise guide. It draws a shaded figure directly
- * on Canvas, so the instruction works without a video player or internet.
+ * An offline pseudo-3D exercise guide. The movement is drawn as a small human
+ * rig rather than as unrelated moving shapes, which keeps the sequence clear.
  */
 public class MorningExerciseView extends View {
-    private static final long STEP_DURATION = 6000L;
+    private static final long STEP_DURATION = 8000L;
     private static final long CYCLE_DURATION = STEP_DURATION * 3L;
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
     private long startedAt = SystemClock.uptimeMillis();
+    private long pausedElapsed;
     private boolean running = true;
 
     public MorningExerciseView(Context context) {
         super(context);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        setContentDescription("Анимация утренней разминки");
+        setContentDescription("Понятная анимация утренней разминки");
         setOnClickListener(v -> toggle());
     }
 
     public void toggle() {
-        running = !running;
-        if (running) startedAt = SystemClock.uptimeMillis();
+        if (running) {
+            pausedElapsed = elapsed();
+            running = false;
+        } else {
+            startedAt = SystemClock.uptimeMillis() - pausedElapsed;
+            running = true;
+        }
         invalidate();
     }
 
@@ -42,14 +49,22 @@ public class MorningExerciseView extends View {
     }
 
     public void startAnimation() {
-        running = true;
         startedAt = SystemClock.uptimeMillis();
+        pausedElapsed = 0L;
+        running = true;
         invalidate();
     }
 
     public void stopAnimation() {
         running = false;
+        pausedElapsed = 0L;
         invalidate();
+    }
+
+    private long elapsed() {
+        return running
+                ? (SystemClock.uptimeMillis() - startedAt) % CYCLE_DURATION
+                : pausedElapsed;
     }
 
     @Override
@@ -58,153 +73,214 @@ public class MorningExerciseView extends View {
         float density = getResources().getDisplayMetrics().density;
         float width = getWidth();
         float height = getHeight();
-        float scale = Math.min(width / (330f * density), height / (360f * density));
+        float widthDp = width / density;
+        float heightDp = height / density;
+        // Coordinates below are in a small, readable stage measured in dp.
+        float s = density * Math.min((widthDp - 34f) / 320f, (heightDp - 64f) / 280f);
+        s = Math.max(density * 0.65f, Math.min(s, density * 1.15f));
         float centerX = width / 2f;
-        float baseY = height * 0.83f;
+        float floorY = height - 30f * s;
 
-        drawBackground(canvas, width, height, density);
-        drawFloor(canvas, centerX, baseY + 7f * density, scale, density);
+        drawBackground(canvas, width, height);
+        drawFloor(canvas, centerX, floorY, s, density);
 
-        long elapsed = running ? (SystemClock.uptimeMillis() - startedAt) % CYCLE_DURATION : 0L;
-        int step = (int) (elapsed / STEP_DURATION);
-        float stepProgress = (elapsed % STEP_DURATION) / (float) STEP_DURATION;
-        float eased = smooth(stepProgress);
-        drawPhaseLabel(canvas, width, density, step, eased);
-        drawFigure(canvas, centerX, baseY, scale, density, step, eased);
+        long time = elapsed();
+        int step = (int) (time / STEP_DURATION);
+        float stepProgress = (time % STEP_DURATION) / (float) STEP_DURATION;
+        drawPhaseLabel(canvas, width, density, step);
+        drawFigure(canvas, centerX, floorY, s, density, step, stepProgress);
 
         if (running) postInvalidateOnAnimation();
     }
 
-    private void drawBackground(Canvas canvas, float width, float height, float density) {
+    private void drawBackground(Canvas canvas, float width, float height) {
         paint.setStyle(Paint.Style.FILL);
         paint.setShader(new LinearGradient(0, 0, 0, height,
-                Color.rgb(239, 248, 241), Color.rgb(216, 235, 222), Shader.TileMode.CLAMP));
+                Color.rgb(244, 250, 245), Color.rgb(211, 234, 219), Shader.TileMode.CLAMP));
         canvas.drawRect(0, 0, width, height, paint);
         paint.setShader(null);
     }
 
-    private void drawFloor(Canvas canvas, float centerX, float y, float scale, float density) {
+    private void drawFloor(Canvas canvas, float centerX, float floorY, float s, float density) {
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.argb(35, 31, 77, 59));
-        rect.set(centerX - 105f * scale * density, y - 10f * scale * density,
-                centerX + 105f * scale * density, y + 19f * scale * density);
-        canvas.drawOval(rect, paint);
+        paint.setColor(Color.argb(42, 25, 67, 48));
+        canvas.drawOval(centerX - 104f * s, floorY - 10f * s,
+                centerX + 104f * s, floorY + 19f * s, paint);
 
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(1f * density);
+        paint.setStrokeWidth(Math.max(1f, density));
         paint.setColor(Color.argb(42, 47, 107, 83));
+        canvas.drawOval(centerX - 118f * s, floorY - 17f * s,
+                centerX + 118f * s, floorY + 25f * s, paint);
         for (int i = -2; i <= 2; i++) {
-            float x = centerX + i * 42f * scale * density;
-            canvas.drawLine(x, y - 1f * density, x * 0.94f + centerX * 0.06f,
-                    y + 30f * density, paint);
+            float x = centerX + i * 43f * s;
+            canvas.drawLine(x, floorY - 2f * s, centerX + i * 30f * s,
+                    floorY + 25f * s, paint);
         }
-        canvas.drawOval(centerX - 118f * scale * density, y - 15f * scale * density,
-                centerX + 118f * scale * density, y + 25f * scale * density, paint);
         paint.setStyle(Paint.Style.FILL);
     }
 
-    private void drawPhaseLabel(Canvas canvas, float width, float density, int step, float progress) {
-        String[] titles = {"Потянуться вверх", "Разбудить плечи", "Шагать на месте"};
-        String[] counters = {"1 / 3", "2 / 3", "3 / 3"};
+    private void drawPhaseLabel(Canvas canvas, float width, float density, int step) {
+        String[] titles = {"Потянуться вверх", "Круги плечами", "Шагать на месте"};
         paint.setShader(null);
-        paint.setTypeface(android.graphics.Typeface.create("sans", android.graphics.Typeface.BOLD));
         paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTypeface(Typeface.create("sans", Typeface.BOLD));
         paint.setTextSize(18f * density);
         paint.setColor(Color.rgb(31, 77, 59));
         canvas.drawText(titles[step], width / 2f, 31f * density, paint);
-        paint.setTypeface(android.graphics.Typeface.create("sans", android.graphics.Typeface.NORMAL));
+        paint.setTypeface(Typeface.create("sans", Typeface.NORMAL));
         paint.setTextSize(12f * density);
         paint.setColor(Color.rgb(107, 125, 118));
-        canvas.drawText(counters[step] + "  ·  мягкий темп", width / 2f, 50f * density, paint);
+        canvas.drawText((step + 1) + " / 3  ·  медленно и без рывков", width / 2f,
+                50f * density, paint);
     }
 
-    private void drawFigure(Canvas canvas, float cx, float baseY, float scale, float density,
-                            int step, float progress) {
-        float s = scale * density;
-        float bodyTop = baseY - 176f * s;
-        float shoulderY = bodyTop + 22f * s;
-        float hipY = baseY - 72f * s;
-        float headY = bodyTop - 26f * s;
-        float march = step == 2 ? (float) Math.sin(progress * Math.PI * 2f) : 0f;
-        float armLift = step == 0 ? (float) Math.sin(progress * Math.PI) : 0f;
-        float shoulderSwing = step == 1 ? (float) Math.sin(progress * Math.PI * 2f) : 0f;
+    private void drawFigure(Canvas canvas, float cx, float floorY, float s, float density,
+                            int step, float rawProgress) {
+        float progress = smooth(rawProgress);
+        float shoulderY = floorY - 192f * s;
+        float hipY = floorY - 101f * s;
+        float headY = floorY - 238f * s;
+        float bodyTop = floorY - 214f * s;
+        float bodyBottom = floorY - 107f * s;
 
-        // Legs first, so the torso sits naturally above them.
-        float leftLeg = step == 2 ? march : 0f;
-        float rightLeg = step == 2 ? -march : 0f;
-        drawLeg(canvas, cx - 13f * s, hipY, -leftLeg, s, density, Color.rgb(64, 87, 116));
-        drawLeg(canvas, cx + 13f * s, hipY, -rightLeg, s, density, Color.rgb(64, 87, 116));
+        float leftLegSwing = 0f;
+        float rightLegSwing = 0f;
+        if (step == 2) {
+            // Two complete, even marching cycles. Both feet start and finish on the floor.
+            float march = (float) Math.sin(progress * Math.PI * 4f);
+            leftLegSwing = march;
+            rightLegSwing = -march;
+        }
 
-        // Arms move opposite to the marching leg and make small shoulder circles.
-        drawArm(canvas, cx - 23f * s, shoulderY, false, armLift, shoulderSwing,
-                step == 2 ? -rightLeg * 0.45f : 0f, s, density);
-        drawArm(canvas, cx + 23f * s, shoulderY, true, armLift, shoulderSwing,
-                step == 2 ? -leftLeg * 0.45f : 0f, s, density);
+        drawLeg(canvas, cx - 14f * s, hipY, leftLegSwing, s, density, false);
+        drawLeg(canvas, cx + 14f * s, hipY, rightLegSwing, s, density, true);
 
-        // Torso with a light-to-dark gradient gives the figure a simple 3D volume.
+        if (step == 0) {
+            float lift = reachAmount(progress);
+            drawReachArm(canvas, cx - 29f * s, shoulderY, false, lift, s, density);
+            drawReachArm(canvas, cx + 29f * s, shoulderY, true, lift, s, density);
+        } else if (step == 1) {
+            drawShoulderArm(canvas, cx - 29f * s, shoulderY, false, progress, s, density);
+            drawShoulderArm(canvas, cx + 29f * s, shoulderY, true, progress, s, density);
+        } else {
+            float swing = (float) Math.sin(progress * Math.PI * 4f);
+            drawMarchArm(canvas, cx - 29f * s, shoulderY, false, -swing, s, density);
+            drawMarchArm(canvas, cx + 29f * s, shoulderY, true, swing, s, density);
+        }
+
+        // Torso is drawn after limbs to create clean joints and a simple volumetric shirt.
         paint.setStyle(Paint.Style.FILL);
-        paint.setShader(new LinearGradient(cx - 31f * s, bodyTop, cx + 35f * s, bodyTop,
-                Color.rgb(89, 159, 119), Color.rgb(31, 96, 68), Shader.TileMode.CLAMP));
-        rect.set(cx - 30f * s, bodyTop, cx + 30f * s, hipY + 8f * s);
-        canvas.drawRoundRect(rect, 20f * s, 20f * s, paint);
+        paint.setShader(new LinearGradient(cx - 34f * s, bodyTop, cx + 34f * s, bodyTop,
+                Color.rgb(105, 173, 132), Color.rgb(30, 91, 65), Shader.TileMode.CLAMP));
+        rect.set(cx - 30f * s, bodyTop, cx + 30f * s, bodyBottom);
+        canvas.drawRoundRect(rect, 19f * s, 19f * s, paint);
         paint.setShader(null);
-        drawJoint(canvas, cx, hipY + 2f * s, 7f * s, Color.rgb(47, 107, 83));
+        paint.setColor(Color.argb(80, 255, 255, 255));
+        canvas.drawRoundRect(cx - 22f * s, bodyTop + 9f * s,
+                cx - 13f * s, bodyBottom - 14f * s, 5f * s, 5f * s, paint);
+        drawJoint(canvas, cx, bodyBottom, 7f * s, Color.rgb(47, 107, 83));
 
-        // Head as a shaded sphere.
-        paint.setShader(new RadialGradient(cx - 6f * s, headY - 6f * s, 24f * s,
-                new int[]{Color.rgb(255, 229, 200), Color.rgb(207, 143, 103)},
+        // Head: a shaded sphere with a small highlight makes orientation readable.
+        paint.setShader(new RadialGradient(cx - 7f * s, headY - 8f * s, 25f * s,
+                new int[]{Color.rgb(255, 235, 213), Color.rgb(205, 139, 98)},
                 new float[]{0f, 1f}, Shader.TileMode.CLAMP));
         canvas.drawCircle(cx, headY, 22f * s, paint);
         paint.setShader(null);
-        paint.setColor(Color.rgb(81, 54, 45));
-        canvas.drawCircle(cx, headY - 16f * s, 15f * s, paint);
-        paint.setColor(Color.rgb(255, 240, 220));
-        canvas.drawCircle(cx - 7f * s, headY - 7f * s, 2.2f * s, paint);
-        canvas.drawCircle(cx + 7f * s, headY - 7f * s, 2.2f * s, paint);
+        paint.setColor(Color.rgb(79, 54, 45));
+        canvas.drawArc(cx - 21f * s, headY - 23f * s, cx + 21f * s, headY + 11f * s,
+                180f, 180f, true, paint);
+        paint.setColor(Color.rgb(255, 248, 235));
+        canvas.drawCircle(cx - 7f * s, headY - 6f * s, 2.2f * s, paint);
+        canvas.drawCircle(cx + 7f * s, headY - 6f * s, 2.2f * s, paint);
     }
 
-    private void drawLeg(Canvas canvas, float hipX, float hipY, float movement, float s,
-                         float density, int color) {
-        float kneeX = hipX + movement * 29f * s;
-        float kneeY = hipY + 47f * s - Math.abs(movement) * 7f * s;
-        float footX = hipX - movement * 14f * s;
-        float footY = hipY + 101f * s - Math.abs(movement) * 13f * s;
-        drawSegment(canvas, hipX, hipY, kneeX, kneeY, 15f * s, color, density);
-        drawSegment(canvas, kneeX, kneeY, footX, footY, 13f * s, color, density);
-        drawSegment(canvas, footX - 3f * s, footY, footX + 17f * s, footY, 9f * s,
-                Color.rgb(236, 164, 105), density);
-        drawJoint(canvas, kneeX, kneeY, 7f * s, color);
+    private float reachAmount(float progress) {
+        // Down -> up -> two-count hold -> down, with no hard pose changes.
+        if (progress < 0.28f) return smooth(progress / 0.28f);
+        if (progress < 0.55f) return 1f;
+        if (progress < 0.72f) return 1f - smooth((progress - 0.55f) / 0.17f) * 0.08f;
+        return 0.92f * (1f - smooth((progress - 0.72f) / 0.28f));
     }
 
-    private void drawArm(Canvas canvas, float shoulderX, float shoulderY, boolean right,
-                         float lift, float circle, float marchSwing, float s, float density) {
+    private void drawLeg(Canvas canvas, float hipX, float hipY, float swing, float s,
+                         float density, boolean right) {
+        float kneeX = hipX + swing * 22f * s;
+        float kneeY = hipY + 47f * s - Math.max(0f, swing) * 9f * s;
+        float footX = hipX + swing * 39f * s;
+        float footY = hipY + 100f * s - Math.max(0f, swing) * 13f * s;
+        drawSegment(canvas, hipX, hipY, kneeX, kneeY, 15f * s,
+                Color.rgb(65, 87, 116), density);
+        drawSegment(canvas, kneeX, kneeY, footX, footY, 13f * s,
+                Color.rgb(65, 87, 116), density);
+        drawJoint(canvas, kneeX, kneeY, 7f * s, Color.rgb(65, 87, 116));
+        float shoeDirection = right ? -1f : 1f;
+        drawSegment(canvas, footX, footY, footX + shoeDirection * 18f * s, footY,
+                9f * s, Color.rgb(233, 159, 99), density);
+    }
+
+    private void drawReachArm(Canvas canvas, float shoulderX, float shoulderY, boolean right,
+                              float lift, float s, float density) {
         float side = right ? 1f : -1f;
-        float elbowX;
-        float elbowY;
+        float elbowX = shoulderX + side * (39f + 5f * lift) * s;
+        float elbowY = shoulderY + (45f - 68f * lift) * s;
+        float handX = shoulderX + side * (34f + 3f * lift) * s;
+        float handY = shoulderY + (92f - 144f * lift) * s;
+        drawArmSegments(canvas, shoulderX, shoulderY, elbowX, elbowY, handX, handY, s, density);
+    }
+
+    private void drawShoulderArm(Canvas canvas, float shoulderX, float shoulderY, boolean right,
+                                 float progress, float s, float density) {
+        float side = right ? 1f : -1f;
+        float pose;
         float handX;
         float handY;
-        if (lift > 0f) {
-            elbowX = shoulderX + side * (36f + 8f * lift) * s;
-            elbowY = shoulderY - (22f + 35f * lift) * s;
-            handX = shoulderX + side * (42f + 8f * lift) * s;
-            handY = shoulderY - (60f + 73f * lift) * s;
-        } else if (Math.abs(circle) > 0.01f) {
-            elbowX = shoulderX + side * (46f + 10f * circle) * s;
-            elbowY = shoulderY + (6f + 18f * circle) * s;
-            handX = shoulderX + side * (66f + 13f * circle) * s;
-            handY = shoulderY + (19f + 27f * circle) * s;
+        float elbowX;
+        float elbowY;
+        if (progress < 0.16f) {
+            pose = smooth(progress / 0.16f);
+            elbowX = shoulderX + side * (39f + 13f * pose) * s;
+            elbowY = shoulderY + (45f - 42f * pose) * s;
+            handX = shoulderX + side * (34f + 66f * pose) * s;
+            handY = shoulderY + (92f - 88f * pose) * s;
+        } else if (progress > 0.84f) {
+            pose = smooth((progress - 0.84f) / 0.16f);
+            elbowX = shoulderX + side * (52f - 13f * pose) * s;
+            elbowY = shoulderY + (3f + 42f * pose) * s;
+            handX = shoulderX + side * (100f - 66f * pose) * s;
+            handY = shoulderY + (4f + 88f * pose) * s;
         } else {
-            elbowX = shoulderX + side * 38f * s;
-            elbowY = shoulderY + 47f * s + marchSwing * 14f * s;
-            handX = shoulderX + side * 31f * s;
-            handY = shoulderY + 91f * s + marchSwing * 19f * s;
+            float circleProgress = (progress - 0.16f) / 0.68f;
+            float angle = circleProgress * Math.PI * 4f;
+            float cos = (float) Math.cos(angle);
+            float sin = (float) Math.sin(angle);
+            elbowX = shoulderX + side * (51f + 7f * cos) * s;
+            elbowY = shoulderY + (3f + 12f * sin) * s;
+            handX = shoulderX + side * (92f + 13f * cos) * s;
+            handY = shoulderY + (4f + 27f * sin) * s;
         }
+        drawArmSegments(canvas, shoulderX, shoulderY, elbowX, elbowY, handX, handY, s, density);
+    }
+
+    private void drawMarchArm(Canvas canvas, float shoulderX, float shoulderY, boolean right,
+                              float swing, float s, float density) {
+        float side = right ? 1f : -1f;
+        float elbowX = shoulderX + side * (38f + swing * 11f) * s;
+        float elbowY = shoulderY + (44f + Math.abs(swing) * 4f) * s;
+        float handX = shoulderX + side * (31f + swing * 19f) * s;
+        float handY = shoulderY + (88f + Math.abs(swing) * 5f) * s;
+        drawArmSegments(canvas, shoulderX, shoulderY, elbowX, elbowY, handX, handY, s, density);
+    }
+
+    private void drawArmSegments(Canvas canvas, float shoulderX, float shoulderY,
+                                 float elbowX, float elbowY, float handX, float handY,
+                                 float s, float density) {
         drawSegment(canvas, shoulderX, shoulderY, elbowX, elbowY, 12f * s,
-                Color.rgb(89, 159, 119), density);
+                Color.rgb(91, 158, 116), density);
         drawSegment(canvas, elbowX, elbowY, handX, handY, 10f * s,
-                Color.rgb(89, 159, 119), density);
+                Color.rgb(91, 158, 116), density);
         drawJoint(canvas, shoulderX, shoulderY, 7f * s, Color.rgb(47, 107, 83));
-        drawJoint(canvas, elbowX, elbowY, 6f * s, Color.rgb(69, 126, 91));
+        drawJoint(canvas, elbowX, elbowY, 6f * s, Color.rgb(70, 128, 94));
         drawJoint(canvas, handX, handY, 7f * s, Color.rgb(255, 229, 200));
     }
 
@@ -219,6 +295,10 @@ public class MorningExerciseView extends View {
         paint.setStrokeWidth(width);
         paint.setColor(color);
         canvas.drawLine(x1, y1, x2, y2, paint);
+        // Narrow highlight on each limb makes the direction and bend easier to follow.
+        paint.setStrokeWidth(Math.max(1f, width * 0.18f));
+        paint.setColor(Color.argb(90, 255, 255, 255));
+        canvas.drawLine(x1 - density, y1 - density, x2 - density, y2 - density, paint);
         paint.setStyle(Paint.Style.FILL);
     }
 
